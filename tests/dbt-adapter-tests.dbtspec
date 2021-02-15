@@ -1,0 +1,32 @@
+target:
+  type: ibmdb2
+  schema: "dbt_test_{{ var('_dbt_random_suffix') }}"
+  threads: 1
+  database: testdb
+  host: localhost
+  port: 50000
+  protocol: TCPIP
+  username: db2inst1
+  password: ibmdb2
+
+sequences:
+  test_dbt_empty: empty
+  test_dbt_base: base
+  #test_dbt_ephemeral: ephemeral
+  #test_dbt_incremental: incremental
+  #test_dbt_snapshot_strategy_timestamp: snapshot_strategy_timestamp
+  #test_dbt_snapshot_strategy_check_cols: snapshot_strategy_check_cols
+  #test_dbt_data_test: data_test
+  #test_dbt_schema_test: schema_test
+  #test_dbt_ephemeral_data_tests: data_test_ephemeral_models
+
+projects:
+  - overrides: base
+    dbt_project_yml:
+      seeds:
+        dbt_test_project:
+          base:
+            +column_types:
+              id: int
+              name: varchar(64)
+              some_date: timestamp

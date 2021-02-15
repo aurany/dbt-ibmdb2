@@ -1,0 +1,10 @@
+name: dbt_ibmdb2
+config-version: 2
+version: 1.0
+
+quoting:
+  database: false
+  schema: true
+  identifier: true
+
+macro-paths: ["macros"]
