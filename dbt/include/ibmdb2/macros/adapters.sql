@@ -4,9 +4,9 @@
 
   BEGIN
      IF NOT EXISTS (
-       SELECT SCHEMANAME
-       FROM SYSCAT.SCHEMATA
-       WHERE SCHEMANAME = '{{ relation.without_identifier().schema }}'
+       SELECT schemaname
+       FROM syscat.schemata
+       WHERE schemaname = '{{ relation.without_identifier().schema }}'
      ) THEN
         PREPARE stmt FROM 'CREATE SCHEMA "{{ relation.without_identifier().schema }}"';
         EXECUTE stmt;
@@ -21,21 +21,21 @@
   {%- call statement('drop_schema') -%}
 
   BEGIN
-  	FOR T AS
+  	FOR t AS
       SELECT
-        TABNAME,
-        TABSCHEMA,
-        (CASE WHEN TYPE='T' THEN 'TABLE' ELSE 'VIEW' END) AS TYPE
-      FROM SYSCAT.TABLES t
-      WHERE TABSCHEMA = '{{ relation.without_identifier().schema }}'
+        tabname,
+        tabschema,
+        (CASE WHEN type='T' THEN 'TABLE' ELSE 'VIEW' END) AS type
+      FROM syscat.tables t
+      WHERE tabschema = '{{ relation.without_identifier().schema }}'
   		DO
-  			PREPARE stmt FROM 'DROP '||T.TYPE||' "'||T.TABSCHEMA||'"."'||T.TABNAME||'"';
+  			PREPARE stmt FROM 'DROP '||t.type||' "'||t.tabschema||'"."'||t.tabname||'"';
   			EXECUTE stmt;
   	END FOR;
     IF EXISTS (
-      SELECT SCHEMANAME
-      FROM SYSCAT.SCHEMATA
-      WHERE SCHEMANAME = '{{ relation.without_identifier().schema }}'
+      SELECT schemaname
+      FROM syscat.schemata
+      WHERE schemaname = '{{ relation.without_identifier().schema }}'
     ) THEN
       PREPARE stmt FROM 'DROP SCHEMA "{{ relation.without_identifier().schema }}" RESTRICT';
       EXECUTE stmt;
@@ -51,10 +51,10 @@
 
   {{ sql_header if sql_header is not none }}
 
-  create table {{ relation.quote(schema=True, identifier=True) }}
-  as (
+  CREATE TABLE {{ relation.quote(schema=True, identifier=True) }}
+  AS (
     {{ sql }}
-  ) with data
+  ) WITH DATA
 
 {%- endmacro %}
 
@@ -63,7 +63,7 @@
   {%- set sql_header = config.get('sql_header', none) -%}
 
   {{ sql_header if sql_header is not none }}
-  create view {{ relation.quote(schema=True, identifier=True) }} as
+  CREATE VIEW {{ relation.quote(schema=True, identifier=True) }} AS
     {{ sql }}
 
 {% endmacro %}
@@ -72,18 +72,18 @@
 {% macro ibmdb2__get_columns_in_relation(relation) -%}
   {% call statement('get_columns_in_relation', fetch_result=True) %}
 
-      select
-          trim(COLNAME) AS "name",
-          TYPENAME AS "type",
-          LENGTH as "character_maximum_length",
-          LENGTH as "numeric_precision",
-          SCALE as "numeric_scale"
-      from syscat.columns
-      where TABNAME = '{{ relation.identifier }}'
+      SELECT
+          trim(colname) AS "name",
+          typename AS "type",
+          length AS "character_maximum_length",
+          length AS "numeric_precision",
+          scale AS "numeric_scale"
+      FROM syscat.columns
+      WHERE tabname = '{{ relation.identifier }}'
         {% if relation.schema %}
-        and TABSCHEMA = '{{ relation.schema }}'
+        AND tabschema = '{{ relation.schema }}'
         {% endif %}
-      order by COLNO
+      ORDER BY colno
 
   {% endcall %}
   {% set table = load_result('get_columns_in_relation').table %}
@@ -94,16 +94,16 @@
 {% macro ibmdb2__list_relations_without_caching(schema_relation) %}
   {% call statement('list_relations_without_caching', fetch_result=True) -%}
 
-  select
+  SELECT
     'testdb' as "database_name",
-    trim(TABNAME) as "name",
-    trim(TABSCHEMA) as "schema_name",
-    case
-      when 'T' then 'table'
-      when 'V' then 'view'
-    end as "kind"
-  from syscat.tables
-  where TYPE in ('T', 'V') and TABSCHEMA = '{{ schema_relation.schema }}'
+    TRIM(tabname) as "name",
+    TRIM(tabschema) as "schema_name",
+    CASE
+      WHEN type = 'T' THEN 'table'
+      WHEN type = 'V' THEN 'view'
+    END AS "kind"
+  FROM syscat.tables
+  WHERE type IN('T', 'V') AND tabschema = '{{ schema_relation.schema }}'
 
   {% endcall %}
   {{ return(load_result('list_relations_without_caching').table) }}
@@ -125,17 +125,17 @@
       DECLARE delete_stmt VARCHAR(1000);
 
       IF EXISTS (
-        SELECT TABNAME
-        FROM SYSCAT.TABLES
-        WHERE TABNAME='{{ from_relation.identifier }}' AND TABSCHEMA='{{ from_relation.schema }}' AND TYPE = 'T'
+        SELECT tabname
+        FROM syscat.tables
+        WHERE tabname='{{ from_relation.identifier }}' AND tabschema='{{ from_relation.schema }}' AND type = 'T'
       ) THEN
         SET rename_stmt = 'RENAME TABLE "{{ from_relation.schema }}"."{{ from_relation.identifier }}" TO "{{ to_relation.identifier }}"';
         PREPARE stmt FROM rename_stmt;
         EXECUTE stmt;
       ELSEIF EXISTS (
-        SELECT TABNAME
-        FROM SYSCAT.TABLES
-        WHERE TABNAME='{{ from_relation.identifier }}' AND TABSCHEMA='{{ from_relation.schema }}' AND TYPE = 'V'
+        SELECT tabname
+        FROM syscat.tables
+        WHERE tabname='{{ from_relation.identifier }}' AND tabschema='{{ from_relation.schema }}' AND type = 'V'
       ) THEN
         SET create_stmt = (
           -- improve regexp here, use regexp_replace instead?
@@ -147,14 +147,14 @@
               REGEXP_SUBSTR(
                 -- remove comments here (single and multiline)
                 REGEXP_REPLACE(
-                  TEXT,
+                  text,
                   '(/\*(.|[\r\n])*?\*/)|(--(.*|[\r\n]))','', 1, 1, 'i' -- removing comments
                 ),
                 '(?<=\sAS)(.*\n)+', 1, 1, 'i' -- removing 'create view as'
               )
             )
-          FROM SYSCAT.VIEWS
-          WHERE VIEWSCHEMA = '{{ from_relation.schema }}' AND VIEWNAME = '{{ from_relation.identifier }}'
+          FROM syscat.views
+          WHERE viewschema = '{{ from_relation.schema }}' AND viewname = '{{ from_relation.identifier }}'
         );
         PREPARE stmt FROM create_stmt;
         EXECUTE stmt;
@@ -169,9 +169,9 @@
 
 {% macro ibmdb2__list_schemas(database) %}
     {% call statement('list_schemas', fetch_result=True, auto_begin=False) -%}
-        select distinct
-          trim(SCHEMANAME) AS "name"
-        from syscat.schemata
+        SELECT DISTINCT
+          TRIM(schemaname) AS "name"
+        FROM syscat.schemata
     {%- endcall %}
 
     {{ return(load_result('list_schemas').table) }}
@@ -183,16 +183,16 @@
 
     BEGIN
       IF EXISTS (
-        SELECT TABNAME
-        FROM SYSCAT.TABLES
-        WHERE TABNAME='{{ relation.identifier }}' AND TABSCHEMA='{{ relation.schema }}' AND TYPE = 'T'
+        SELECT tabname
+        FROM syscat.tables
+        WHERE tabname='{{ relation.identifier }}' AND tabschema='{{ relation.schema }}' AND type = 'T'
       ) THEN
         PREPARE stmt FROM 'DROP TABLE "{{ relation.schema }}"."{{ relation.identifier }}"';
         EXECUTE stmt;
       ELSEIF EXISTS (
-        SELECT TABNAME
-        FROM SYSCAT.TABLES
-        WHERE TABNAME='{{ relation.identifier }}' AND TABSCHEMA='{{ relation.schema }}' AND TYPE = 'V'
+        SELECT tabname
+        FROM syscat.tables
+        WHERE tabname='{{ relation.identifier }}' AND tabschema='{{ relation.schema }}' AND type = 'V'
       ) THEN
         PREPARE stmt FROM 'DROP VIEW "{{ relation.schema }}"."{{ relation.identifier }}"';
         EXECUTE stmt;

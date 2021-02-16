@@ -7,7 +7,7 @@ target:
   port: 50000
   protocol: TCPIP
   username: db2inst1
-  password: ibmdb2
+  password: ibm123
 
 sequences:
   test_dbt_empty: empty

@@ -1,54 +1,55 @@
-{% macro oracle__get_catalog(information_schema, schemas) -%}
+{% macro ibmdb2__get_catalog(information_schema, schemas) -%}
 
   {%- call statement('catalog', fetch_result=True) -%}
 
-    with columns as (
-      select
-        COLNAME,
-        TYPENAME,
-        'testdb' AS DATABASE
-        TABNAME,
-        TABSCHEMA
-      from syscat.columns
+    WITH columns AS (
+      SELECT
+        colname,
+        typename,
+        'testdb' AS database,
+        tabname,
+        tabschema,
+        colno
+      FROM syscat.columns
     ),
-    tables as (
-      select
-        'testdb' as DATABASE,
-        TABSCHEMA,
-        TABNAME,
-        OWNER,
-        case
-          when TYPE = 'T' then 'table'
-          when TYPE = 'V' then 'view'
-        end as TYPE
-      from syscat.tables
-      where TYPE in ('T', 'V')
+    tables AS (
+      SELECT
+        'testdb' AS database,
+        tabschema,
+        tabname,
+        owner,
+        CASE
+          WHEN type = 'T' THEN 'table'
+          WHEN type = 'V' THEN 'view'
+        END AS type
+      FROM syscat.tables
+      WHERE type IN('T', 'V')
     )
-    select
-      tables.DATABASE as "table_database",
-      tables.TABSCHEMA as "table_schema",
-      tables.TABNAME as "table_name",
-      tables.TYPE as "table_type",
-      'blabla' as "table_comment",
-      columns.COLNAME as "column_name",
-      columns.COLNO as "column_index",
-      columns.TYPENAME as "column_type",
-      'blabla' as "column_comment",
-      tables.OWNER as "table_owner"
-    from tables
-    inner join columns on
-      columns.DATABASE = tables.DATABASE and
-      columns.TABSCHEMA = tables.TABSCHEMA and
-      columns.TABNAME = tables.TABNAME
-    where (
+    SELECT
+      tables.database AS "table_database",
+      tables.tabschema AS "table_schema",
+      tables.tabname AS "table_name",
+      tables.type AS "table_type",
+      'blabla' AS "table_comment",
+      columns.colname AS "column_name",
+      columns.colno AS "column_index",
+      columns.typename AS "column_type",
+      'blabla' AS "column_comment",
+      tables.owner AS "table_owner"
+    FROM tables
+    INNER JOIN columns ON
+      columns.database = tables.DATABASE AND
+      columns.tabschema = tables.TABSCHEMA AND
+      columns.tabname = tables.TABNAME
+    WHERE (
         {%- for schema in schemas -%}
-          tables.TABSCHEMA = '{{ schema }}' {%- if not loop.last %} or {% endif -%}
+          tables.tabschema = '{{ schema }}' {%- if not loop.last %} OR {% endif -%}
         {%- endfor -%}
     )
-    order by
-      TABSCHEMA,
-      TABNAME,
-      COLNO
+    ORDER BY
+      tables.tabschema,
+      tables.tabname,
+      columns.colno
 
   {%- endcall -%}
   {{ return(load_result('catalog').table) }}
