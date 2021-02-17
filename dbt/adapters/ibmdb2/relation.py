@@ -20,3 +20,7 @@ class IBMDB2IncludePolicy(Policy):
 class IBMDB2Relation(BaseRelation):
     quote_policy: IBMDB2QuotePolicy = IBMDB2QuotePolicy()
     include_policy: IBMDB2IncludePolicy = IBMDB2IncludePolicy()
+
+    @staticmethod
+    def add_ephemeral_prefix(name: str):
+        return f'dbt_cte__{name}'

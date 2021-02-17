@@ -1,4 +1,14 @@
 
+{% macro ibmdb2__check_schema_exists(information_schema, schema) -%}
+  {% set sql -%}
+        select count(*)
+        from SYSCAT.SCHEMATA
+        where schemaname='{{ schema }}'
+  {%- endset %}
+  {{ return(run_query(sql)) }}
+{% endmacro %}
+
+
 {% macro ibmdb2__create_schema(relation) -%}
   {%- call statement('create_schema') -%}
 
@@ -204,5 +214,27 @@
 
 
 {% macro ibmdb2__current_timestamp() -%}
-  CURRENT_DATE
+  CURRENT_TIMESTAMP
 {%- endmacro %}
+
+
+{% macro ibmdb2__make_temp_relation(base_relation, suffix) %}
+    {% set tmp_identifier = 'dbt_tmp___' ~ base_relation.identifier %}
+    {% set tmp_relation = base_relation.incorporate(
+                                path={"identifier": tmp_identifier}) -%}
+
+    {% do return(tmp_relation) %}
+{% endmacro %}
+
+
+{% macro ibmdb2__get_columns_in_query(select_sql) %}
+    {% call statement('get_columns_in_query', fetch_result=True, auto_begin=False) -%}
+        select * from (
+            {{ select_sql }}
+        ) as dbt_sbq
+        where false
+        limit 0
+    {% endcall %}
+
+    {{ return(load_result('get_columns_in_query').table.columns | map(attribute='name') | list) }}
+{% endmacro %}
