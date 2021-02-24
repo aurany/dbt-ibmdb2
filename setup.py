@@ -3,7 +3,7 @@ from setuptools import find_packages
 from setuptools import setup
 
 package_name = "dbt-ibmdb2"
-package_version = "0.1"
+package_version = "0.1.0"
 description = """The db2 adapter plugin for dbt (data build tool)"""
 
 setup(
