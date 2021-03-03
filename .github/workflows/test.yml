@@ -55,6 +55,10 @@ jobs:
         poetry install
     #- name: Debug
     #  uses: mxschmitt/action-tmate@v3
+    - name: Sleep for 5 mins
+      uses: jakejarvis/wait-action@master
+      with:
+        time: '5m'
     - name: Run tests
       run: |
         source $HOME/.poetry/env
