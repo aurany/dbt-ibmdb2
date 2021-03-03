@@ -25,7 +25,11 @@ jobs:
           IS_OSXFS: false
           PERSISTENT_HOME: false
           HADR_ENABLED: false
-          
+        options: >-
+          --cap-add IPC_LOCK
+          --cap-add IPC_OWNER
+          --name="db2inst1"
+
     strategy:
       matrix:
         python-version: [3.7]
