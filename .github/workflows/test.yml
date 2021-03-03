@@ -1,0 +1,53 @@
+name: Test
+
+on: [push]
+
+jobs:
+  test:
+
+    runs-on: ubuntu-latest
+
+    services:
+      db2:
+        image: ibmcom/db2
+        ports:
+          - 50000:50000
+        env:
+          DBNAME: testdb
+          DB2COMM: TCPIP
+          LICENSE: accept
+          DB2INST1_PASSWORD: ibm123
+          
+    strategy:
+      matrix:
+        python-version: [3.7]
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: Cache pip
+      uses: actions/cache@v2
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ hashFiles('pyproject.toml') }}-${{ hashFiles('poetry.lock') }}-${ GITHUB_REF }
+        restore-keys: |
+          ${{ runner.os }}-pip-
+          ${{ runner.os }}-
+    - name: Install dependencies
+      run: |
+        curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py | python
+        source $HOME/.poetry/env
+        poetry install
+    - name: Debug
+      uses: mxschmitt/action-tmate@v3
+    #- name: Run tests
+    #  run: |
+    #    source $HOME/.poetry/env
+    #    poetry run pytest -v test/dbt-adapter-tests.dbtspec
+    #- name: Build wheels
+    #  run: |
+    #    source $HOME/.poetry/env
+    #    poetry build
