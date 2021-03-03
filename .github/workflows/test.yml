@@ -53,13 +53,13 @@ jobs:
         curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py | python
         source $HOME/.poetry/env
         poetry install
-    - name: Debug
-      uses: mxschmitt/action-tmate@v3
-    #- name: Run tests
-    #  run: |
-    #    source $HOME/.poetry/env
-    #    poetry run pytest -v test/dbt-adapter-tests.dbtspec
-    #- name: Build wheels
-    #  run: |
-    #    source $HOME/.poetry/env
-    #    poetry build
+    #- name: Debug
+    #  uses: mxschmitt/action-tmate@v3
+    - name: Run tests
+      run: |
+        source $HOME/.poetry/env
+        poetry run pytest -v test/dbt-adapter-tests.dbtspec
+    - name: Build wheels
+      run: |
+        source $HOME/.poetry/env
+        poetry build
