@@ -1,0 +1,70 @@
+name: Publish
+
+on:
+  release:
+    types: [created]
+    
+jobs:
+  publish:
+
+    runs-on: ubuntu-latest
+
+    services:
+      db2:
+        image: ibmcom/db2
+        ports:
+          - 50000:50000
+        env:
+          LICENSE: accept
+          DB2INSTANCE: db2inst1
+          DB2INST1_PASSWORD: ibm123
+          DBNAME: testdb
+          BLU: false
+          ENABLE_ORACLE_COMPATIBILITY: false
+          UPDATEAVAIL: NO
+          TO_CREATE_SAMPLEDB: false
+          REPODB: false
+          IS_OSXFS: false
+          PERSISTENT_HOME: false
+          HADR_ENABLED: false
+        options: >-
+          --cap-add IPC_LOCK
+          --cap-add IPC_OWNER
+          --name="db2inst1"
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.8'
+        
+    - name: Install dependencies
+      run: |
+        curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py | python
+        source $HOME/.poetry/env
+        poetry install
+        
+    - name: Wait some time for DB2
+      uses: jakejarvis/wait-action@master
+      with:
+        time: '5m'
+        
+    - name: Run tests
+      run: |
+        source $HOME/.poetry/env
+        poetry run pytest -v test/dbt-adapter-tests.dbtspec
+        
+    - name: Build wheels
+      run: |
+        source $HOME/.poetry/env
+        poetry version $(git tag --points-at HEAD)
+        poetry build
+        
+    - name: Upload
+      env:
+        USERNAME: __token__
+        PASSWORD: ${{ secrets.PYPI_PROD_TOKEN }}
+      run: |
+        source $HOME/.poetry/env
+        poetry publish --username=$USERNAME --password=$PASSWORD
