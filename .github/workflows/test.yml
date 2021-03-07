@@ -67,11 +67,11 @@ jobs:
       run: |
         source $HOME/.poetry/env
         poetry build
-    - name: Upload
-      env:
-        USERNAME: __token__
-        PASSWORD: ${{ secrets.PYPI_TEST_TOKEN }}
-      run: |
-        source $HOME/.poetry/env
-        poetry config repositories.testpypi https://test.pypi.org/legacy/
-        poetry publish --repository testpypi --username=$USERNAME --password=$PASSWORD
+    #- name: Upload
+    #  env:
+    #    USERNAME: __token__
+    #    PASSWORD: ${{ secrets.PYPI_TEST_TOKEN }}
+    #  run: |
+    #    source $HOME/.poetry/env
+    #    poetry config repositories.testpypi https://test.pypi.org/legacy/
+    #    poetry publish --repository testpypi --username=$USERNAME --password=$PASSWORD
