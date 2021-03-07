@@ -1,3 +1,6 @@
+[![pypi](https://badge.fury.io/py/dbt-ibmdb2.svg)](https://pypi.org/project/dbt-ibmdb2/)
+[![python](https://img.shields.io/pypi/pyversions/dbt-ibmdb2)](https://pypi.org/project/dbt-ibmdb2/)
+
 # dbt-ibmdb2
 
 This plugin ports [dbt](https://getdbt.com) functionality to IBM DB2.

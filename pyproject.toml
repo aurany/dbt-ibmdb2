@@ -4,6 +4,15 @@ version = "0.1.0"
 description = "The db2 adapter plugin for dbt (data build tool)"
 authors = ["aurany <rasmus.nyberg@gmail.com>"]
 license = "Apache Software License 2.0"
+readme = "README.md"
+repository = "https://github.com/aurany/dbt-ibmdb2"
+keywords = [
+    "dbt",
+    "ibm",
+    "db2",
+    "data",
+    "engineering"
+]
 packages = [
     { include = "dbt" },
 ]
