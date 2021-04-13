@@ -154,13 +154,13 @@
             CONCAT(
               'CREATE VIEW "{{ to_relation.schema }}"."{{ to_relation.identifier }}" AS ',
               -- remove 'create view as'
-              REGEXP_SUBSTR(
+              REGEXP_REPLACE(
                 -- remove comments here (single and multiline)
                 REGEXP_REPLACE(
                   text,
                   '(/\*(.|[\r\n])*?\*/)|(--(.*|[\r\n]))','', 1, 1, 'i' -- removing comments
                 ),
-                '(?<=\sAS)(.*\n)+', 1, 1, 'i' -- removing 'create view as'
+                '.*CREATE.+VIEW.+AS', '', 1, 1, 'i' -- removing CREATE (OR REPLACE) VIEW AS'
               )
             )
           FROM syscat.views

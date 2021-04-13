@@ -1,0 +1,21 @@
+default:
+  target: dev
+  outputs:
+    dev:
+      type: ibmdb2
+      schema: [schema]
+      database: [database]
+      host: [localhost]
+      username: [username]
+      password: [password]
+      port: [50000] # optional
+      protocol: [TCPIP] # optional
+    prod:
+      type: ibmdb2
+      schema: [schema]
+      database: [database]
+      host: [localhost]
+      username: [username]
+      password: [password]
+      port: [50000] # optional
+      protocol: [TCPIP] # optional
