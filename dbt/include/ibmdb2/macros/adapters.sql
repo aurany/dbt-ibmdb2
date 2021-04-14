@@ -105,13 +105,13 @@
   {% call statement('list_relations_without_caching', fetch_result=True) -%}
 
   SELECT
-    'testdb' as "database_name",
+    '{{ schema_relation.database }}' as "database", -- CURRENT_SERVER always uppercase
     TRIM(tabname) as "name",
-    TRIM(tabschema) as "schema_name",
+    TRIM(tabschema) as "schema",
     CASE
       WHEN type = 'T' THEN 'table'
       WHEN type = 'V' THEN 'view'
-    END AS "kind"
+    END AS "table_type"
   FROM syscat.tables
   WHERE type IN('T', 'V') AND tabschema = '{{ schema_relation.schema }}'
 
