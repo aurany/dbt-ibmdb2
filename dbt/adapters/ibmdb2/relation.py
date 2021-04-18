@@ -5,8 +5,8 @@ from dbt.adapters.base.relation import BaseRelation, Policy
 @dataclass
 class IBMDB2QuotePolicy(Policy):
     database: bool = False
-    schema: bool = True
-    identifier: bool = True
+    schema: bool = False
+    identifier: bool = False
 
 
 @dataclass
@@ -23,4 +23,4 @@ class IBMDB2Relation(BaseRelation):
 
     @staticmethod
     def add_ephemeral_prefix(name: str):
-        return f'dbt_cte__{name}'
+        return f'DBT_CTE__{name}'
