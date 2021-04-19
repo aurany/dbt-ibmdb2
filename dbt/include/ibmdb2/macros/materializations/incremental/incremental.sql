@@ -26,8 +26,9 @@
       {% do to_drop.append(backup_relation) %}
   {% else %}
       {% set tmp_relation = make_temp_relation(target_relation) %}
-      {% do to_drop.append(tmp_relation) %}
+      {% do adapter.drop_relation(tmp_relation) %}
       {% do run_query(create_table_as(True, tmp_relation, sql)) %}
+      {% do to_drop.append(tmp_relation) %}
       {% do adapter.expand_target_column_types(
              from_relation=tmp_relation,
              to_relation=target_relation) %}
@@ -42,12 +43,13 @@
 
   {{ run_hooks(post_hooks, inside_transaction=True) }}
 
-  -- `COMMIT` happens here
-  {% do adapter.commit() %}
-
+  {# rasmus: moved here before commit #}
   {% for rel in to_drop %}
       {% do adapter.drop_relation(rel) %}
   {% endfor %}
+
+  -- `COMMIT` happens here
+  {% do adapter.commit() %}
 
   {{ run_hooks(post_hooks, inside_transaction=False) }}
 

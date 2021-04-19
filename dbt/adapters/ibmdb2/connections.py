@@ -105,6 +105,4 @@ class IBMDB2ConnectionManager(SQLConnectionManager):
         )
 
     def add_begin_query(self):
-        connection = self.get_thread_connection()
-        cursor = connection.handle.cursor
-        return connection, cursor
+        pass

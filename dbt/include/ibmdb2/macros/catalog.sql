@@ -26,12 +26,12 @@
       WHERE TYPE IN('T', 'V')
     )
     SELECT
-      tables.DATABASE AS "table_database",
-      tables.TABSCHEMA AS "table_schema",
-      tables.TABNAME AS "table_name",
+      TRIM(tables.DATABASE) AS "table_database",
+      TRIM(tables.TABSCHEMA) AS "table_schema",
+      TRIM(tables.TABNAME) AS "table_name",
       tables.TYPE AS "table_type",
       NULL AS "table_comment",
-      columns.COLNAME AS "column_name",
+      TRIM(columns.COLNAME) AS "column_name",
       columns.COLNO AS "column_index",
       columns.TYPENAME AS "column_type",
       NULL AS "column_comment",

@@ -3,7 +3,7 @@
   {% set sql -%}
         SELECT COUNT(*)
         FROM SYSCAT.SCHEMATA
-        WHERE SCHEMANAME = UPPER('{{ schema }}')
+        WHERE UPPER(SCHEMANAME) = UPPER('{{ schema }}')
   {%- endset %}
   {{ return(run_query(sql)) }}
 {% endmacro %}
@@ -85,7 +85,7 @@
 
       SELECT
           TRIM(COLNAME) AS "name",
-          TYPENAME AS "type",
+          TRIM(TYPENAME) AS "type",
           LENGTH AS "character_maximum_length",
           LENGTH AS "numeric_precision",
           SCALE AS "numeric_scale"
@@ -106,15 +106,17 @@
   {% call statement('list_relations_without_caching', fetch_result=True) -%}
 
   SELECT
-    LOWER(TRIM(CURRENT_SERVER)) AS DATABASE,
-    LOWER(TRIM(TABSCHEMA)) as SCHEMA,
-    LOWER(TRIM(TABNAME)) as NAME,
+    TRIM(LOWER(CURRENT_SERVER)) AS "database",
+    TRIM(LOWER(TABNAME)) as "name",
+    TRIM(LOWER(TABSCHEMA)) as "schema",
     CASE
       WHEN TYPE = 'T' THEN 'table'
       WHEN TYPE = 'V' THEN 'view'
-    END AS TABLE_TYPE
+    END AS "table_type"
   FROM SYSCAT.TABLES
-  WHERE TABSCHEMA = UPPER('{{ schema_relation.schema }}') AND TYPE IN('T', 'V')
+  WHERE
+    TABSCHEMA = UPPER('{{ schema_relation.schema }}') AND
+    TYPE IN('T', 'V')
   {% endcall %}
   {{ return(load_result('list_relations_without_caching').table) }}
 {% endmacro %}
@@ -139,7 +141,7 @@
         FROM SYSCAT.TABLES
         WHERE TABNAME = UPPER('{{ from_relation.identifier }}') AND TABSCHEMA = UPPER('{{ from_relation.schema }}') AND TYPE = 'T'
       ) THEN
-        SET rename_stmt = 'RENAME TABLE {{ from_relation }} TO {{ to_relation.identifier }}';
+        SET rename_stmt = 'RENAME TABLE {{ from_relation.quote(schema=False, identifier=False) }} TO {{ to_relation.quote(identifier=False).identifier }}';
         PREPARE stmt FROM rename_stmt;
         EXECUTE stmt;
       ELSEIF EXISTS (
@@ -152,7 +154,7 @@
           -- ...or (much better solution if possible) rename view.
           SELECT
             CONCAT(
-              'CREATE VIEW {{ to_relation }} AS ',
+              'CREATE VIEW {{ to_relation.quote(schema=False, identifier=False) }} AS ',
               -- remove 'create view as'
               REGEXP_REPLACE(
                 -- remove comments here (single and multiline)
@@ -168,7 +170,7 @@
         );
         PREPARE stmt FROM create_stmt;
         EXECUTE stmt;
-        PREPARE stmt FROM 'DROP VIEW {{ from_relation }}';
+        PREPARE stmt FROM 'DROP VIEW {{ from_relation.quote(schema=False, identifier=False) }}';
         EXECUTE stmt;
       END IF;
     END
@@ -180,7 +182,7 @@
 {% macro ibmdb2__list_schemas(database) %}
     {% call statement('list_schemas', fetch_result=True, auto_begin=False) -%}
         SELECT DISTINCT
-          LOWER(TRIM(SCHEMANAME)) AS "name"
+          TRIM(SCHEMANAME) AS "schema"
         FROM SYSCAT.SCHEMATA
     {%- endcall %}
 
@@ -197,14 +199,14 @@
         FROM SYSCAT.TABLES
         WHERE TABNAME = UPPER('{{ relation.identifier }}') AND TABSCHEMA = UPPER('{{ relation.schema }}') AND TYPE = 'T'
       ) THEN
-        PREPARE stmt FROM 'DROP TABLE {{ relation }}';
+        PREPARE stmt FROM 'DROP TABLE {{ relation.quote(schema=False, identifier=False) }}';
         EXECUTE stmt;
       ELSEIF EXISTS (
         SELECT TABNAME
         FROM SYSCAT.TABLES
         WHERE TABNAME = UPPER('{{ relation.identifier }}') AND TABSCHEMA = UPPER('{{ relation.schema }}') AND TYPE = 'V'
       ) THEN
-        PREPARE stmt FROM 'DROP VIEW {{ relation }}';
+        PREPARE stmt FROM 'DROP VIEW {{ relation.quote(schema=False, identifier=False) }}';
         EXECUTE stmt;
       END IF;
     END
