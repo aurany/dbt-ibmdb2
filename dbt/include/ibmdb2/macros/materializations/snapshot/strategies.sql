@@ -5,10 +5,10 @@
 
 
 {% macro ibmdb2__snapshot_hash_arguments(args) -%}
-    hash({%- for arg in args -%}
+    hex(hash({%- for arg in args -%}
         coalesce(cast({{ arg }} as varchar ), '')
         {% if not loop.last %} || '|' || {% endif %}
-    {%- endfor -%})
+    {%- endfor -%}))
 {%- endmacro %}
 
 
