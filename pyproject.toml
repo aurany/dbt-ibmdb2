@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "dbt-ibmdb2"
-version = "0.1.3"
+version = "0.1.4"
 description = "The db2 adapter plugin for dbt (data build tool)"
 authors = ["aurany <rasmus.nyberg@gmail.com>"]
 license = "Apache Software License 2.0"
@@ -18,14 +18,15 @@ packages = [
 ]
 
 [tool.poetry.dependencies]
-python = "^3.7"
-dbt-core = "^0.19"
-ibm-db = "^3.0.2"
+python = "^3.9"
+dbt-core = "^1.0.3"
+ibm-db = "^3.1.1"
 
 [tool.poetry.dev-dependencies]
-pytest = "^6.2.2"
-pytest-dbt-adapter = {git = "https://github.com/aurany/dbt-adapter-tests.git"}
+pytest = "^6.2.5"
+#pytest-dbt-adapter = {git = "https://github.com/aurany/dbt-adapter-tests.git"}
+pytest-dbt-adapter = "^0.6.0"
 
 [build-system]
-requires = ["poetry-core>=1.0.0"]
+requires = ["poetry-core>=1.0.8"]
 build-backend = "poetry.core.masonry.api"

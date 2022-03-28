@@ -26,6 +26,7 @@ projects:
       seeds:
         dbt_test_project:
           base:
+            +quote_columns: false
             +column_types:
               id: int
               name: varchar(64)
@@ -35,6 +36,7 @@ projects:
       seeds:
         dbt_test_project:
           base:
+            +quote_columns: false
             +column_types:
               id: int
               name: varchar(64)
@@ -44,11 +46,13 @@ projects:
       seeds:
         dbt_test_project:
           base:
+            +quote_columns: false
             +column_types:
               id: int
               name: varchar(64)
               some_date: timestamp
           added:
+            +quote_columns: false
             +column_types:
               id: int
               name: varchar(64)
@@ -58,16 +62,19 @@ projects:
       seeds:
         dbt_test_project:
           base:
+            +quote_columns: false
             +column_types:
               id: int
               name: varchar(64)
               some_date: timestamp
           added:
+            +quote_columns: false
             +column_types:
               id: int
               name: varchar(64)
               some_date: timestamp
           newcolumns:
+            +quote_columns: false
             +column_types:
               id: int
               name: varchar(64)
@@ -78,16 +85,19 @@ projects:
       seeds:
         dbt_test_project:
           base:
+            +quote_columns: false
             +column_types:
               id: int
               name: varchar(64)
               some_date: timestamp
           added:
+            +quote_columns: false
             +column_types:
               id: int
               name: varchar(64)
               some_date: timestamp
           newcolumns:
+            +quote_columns: false
             +column_types:
               id: int
               name: varchar(64)
@@ -98,6 +108,7 @@ projects:
       seeds:
         dbt_test_project:
           base:
+            +quote_columns: false
             +column_types:
               id: int
               name: varchar(64)
@@ -107,6 +118,7 @@ projects:
       seeds:
         dbt_test_project:
           base:
+            +quote_columns: false
             +column_types:
               id: int
               name: varchar(64)
