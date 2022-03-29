@@ -16,8 +16,8 @@ pytest test/dbt-adapter-tests.dbtspec
 ## Full example
 
 ### Prerequisites
-- Modified [`pytest-dbt-adapter`](https://github.com/aurany/dbt-adapter-tests) package, or
-- Original [`pytest-dbt-adapter`](https://github.com/fishtown-analytics/dbt-adapter-tests) package (this wont work as of 2021-02-23)
+- Running DB2 instance (see below for docker example)
+- [`pytest-dbt-adapter`](https://pypi.org/project/pytest-dbt-adapter/) package
 
 ### Docker
 

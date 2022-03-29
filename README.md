@@ -7,15 +7,13 @@ This plugin ports [dbt](https://getdbt.com) functionality to IBM DB2.
 
 This is an experimental plugin:
 - We have not tested it extensively
-- Only tested with DB2 LUW on Mac OS
-- Only tested with [dbt-adapter-tests](https://github.com/fishtown-analytics/dbt-adapter-tests)
-- Compatiblity with other [dbt packages](https://hub.getdbt.com/) (like [dbt_utils](https://hub.getdbt.com/fishtown-analytics/dbt_utils/latest/)) is also untested
+- Tested with [dbt-adapter-tests](https://pypi.org/project/pytest-dbt-adapter/) and DB2 LUW on Mac OS+RHEL8
+- Compatiblity with other [dbt packages](https://hub.getdbt.com/) (like [dbt_utils](https://hub.getdbt.com/fishtown-analytics/dbt_utils/latest/)) is only partially tested
 
 Please read these docs carefully and use at your own risk. [Issues](https://github.com/aurany/dbt-ibmdb2/issues/new) welcome!
 
 **TODO**
-- [ ] Implement incremental strategy if necessary
-- [ ] Find better way to rename/copy views
+- [ ] Implement support for quoting on tables and schemas
 - [ ] Check compatibility with DB2 for z/OS
 
 Table of Contents
