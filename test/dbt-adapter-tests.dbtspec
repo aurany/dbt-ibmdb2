@@ -31,6 +31,14 @@ projects:
               id: int
               name: varchar(64)
               some_date: timestamp
+    paths:
+      models/swappable.sql: |
+        {% set materialized_var = "table" %}
+        {% if var("materialized_var", "table") == "view" %}
+          {% set materialized_var = "view" %}
+        {% endif %}
+        {{ config(materialized=materialized_var) }}
+        select * from {{ source('raw', 'seed') }}
   - overrides: ephemeral
     dbt_project_yml:
       seeds:
