@@ -42,9 +42,13 @@
 
   -- cleanup
   {% if old_relation is not none %}
-      {{ adapter.rename_relation(target_relation, backup_relation) }}
+    {% if old_relation.is_view %}
+        {{ adapter.drop_relation(old_relation) }}
+    {% else %}
+        {{ adapter.rename_relation(old_relation, backup_relation) }}
+    {% endif %}
   {% endif %}
-
+  
   {{ adapter.rename_relation(intermediate_relation, target_relation) }}
 
   {{ run_hooks(post_hooks, inside_transaction=True) }}

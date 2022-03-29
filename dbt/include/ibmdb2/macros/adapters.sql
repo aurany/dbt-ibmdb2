@@ -57,15 +57,25 @@
 
 
 {% macro ibmdb2__create_table_as(temporary, relation, sql) -%}
+
   {%- set sql_header = config.get('sql_header', none) -%}
+  {%- set organize_by = config.get('organize_by', none) -%}
+  {%- set table_space = config.get('table_space', none) -%}
 
   {{ sql_header if sql_header is not none }}
 
   {# Ignore temporary table type #}
   CREATE TABLE {{ relation.quote(schema=False, identifier=False) }}
-  AS (
+    AS (
     {{ sql }}
-  ) WITH DATA
+  )
+  WITH DATA
+  {%- if organize_by is not none -%}
+    {{ ' ORGANIZE BY ' ~ organize_by | upper }}
+  {%- endif -%}
+  {%- if table_space is not none -%}
+    {{ ' IN ' ~ table_space | upper  }}
+  {%- endif -%}
 
 {%- endmacro %}
 
@@ -125,16 +135,9 @@
 {% macro ibmdb2__rename_relation(from_relation, to_relation) -%}
   {% call statement('rename_relation') -%}
 
-    {#
-      Not possible to rename views in DB2 so we have to do some work. The DDL
-      is selected from syscat.views and a new renamed view is created based on
-      this DDL. Comments is removed from the DDL by using regexp but this could
-      probably be done better.
-    #}
+    {# Not possible to rename views in DB2 #}
     BEGIN
       DECLARE rename_stmt VARCHAR(1000);
-      DECLARE create_stmt VARCHAR(10000);
-      DECLARE delete_stmt VARCHAR(1000);
 
       IF EXISTS (
         SELECT TABNAME
@@ -143,34 +146,6 @@
       ) THEN
         SET rename_stmt = 'RENAME TABLE {{ from_relation.quote(schema=False, identifier=False) }} TO {{ to_relation.quote(identifier=False).identifier }}';
         PREPARE stmt FROM rename_stmt;
-        EXECUTE stmt;
-      ELSEIF EXISTS (
-        SELECT TABNAME
-        FROM SYSCAT.TABLES
-        WHERE TABNAME = UPPER('{{ from_relation.identifier }}') AND TABSCHEMA = UPPER('{{ from_relation.schema }}') AND TYPE = 'V'
-      ) THEN
-        SET create_stmt = (
-          -- improve regexp here, use regexp_replace instead?
-          -- ...or (much better solution if possible) rename view.
-          SELECT
-            CONCAT(
-              'CREATE VIEW {{ to_relation.quote(schema=False, identifier=False) }} AS ',
-              -- remove 'create view as'
-              REGEXP_REPLACE(
-                -- remove comments here (single and multiline)
-                REGEXP_REPLACE(
-                  text,
-                  '(/\*(.|[\r\n])*?\*/)|(--(.*|[\r\n]))','', 1, 1, 'i' -- removing comments
-                ),
-                '.*CREATE.+VIEW.+AS', '', 1, 1, 'i' -- removing CREATE (OR REPLACE) VIEW AS'
-              )
-            )
-          FROM SYSCAT.VIEWS
-          WHERE VIEWSCHEMA = UPPER('{{ from_relation.schema }}') AND VIEWNAME = UPPER('{{ from_relation.identifier }}')
-        );
-        PREPARE stmt FROM create_stmt;
-        EXECUTE stmt;
-        PREPARE stmt FROM 'DROP VIEW {{ from_relation.quote(schema=False, identifier=False) }}';
         EXECUTE stmt;
       END IF;
     END
@@ -237,4 +212,11 @@
     {% endcall %}
 
     {{ return(load_result('get_columns_in_query').table.columns | map(attribute='name') | list) }}
+{% endmacro %}
+
+{% macro ibmdb2__truncate_relation(relation) %}
+    {% call statement('truncate_relation') -%}
+        truncate table {{ relation.quote(schema=False, identifier=False) }}
+        immediate
+    {%- endcall %}
 {% endmacro %}

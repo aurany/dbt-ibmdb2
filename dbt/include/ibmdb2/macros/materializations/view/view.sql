@@ -7,8 +7,6 @@
   {%- set old_relation = adapter.get_relation(database=database, schema=schema, identifier=identifier) -%}
   {%- set target_relation = api.Relation.create(identifier=identifier, schema=schema, database=database,
                                                 type='view') -%}
-  {%- set intermediate_relation = api.Relation.create(identifier=tmp_identifier,
-                                                      schema=schema, database=database, type='view') -%}
 
   /*
      This relation (probably) doesn't exist yet. If it does exist, it's a leftover from
@@ -32,23 +30,25 @@
   {{ run_hooks(pre_hooks, inside_transaction=False) }}
 
   -- drop the temp relations if they exists for some reason
-  {{ adapter.drop_relation(intermediate_relation) }}
   {{ adapter.drop_relation(backup_relation) }}
 
   -- `BEGIN` happens here:
   {{ run_hooks(pre_hooks, inside_transaction=True) }}
 
+  -- cleanup
+  -- move the existing table out of the way
+  {% if old_relation is not none %}
+    {% if old_relation.is_view %}
+        {{ adapter.drop_relation(old_relation) }}
+    {% else %}
+        {{ adapter.rename_relation(old_relation, backup_relation) }}
+    {% endif %}
+  {% endif %}
+
   -- build model
   {% call statement('main') -%}
-    {{ create_view_as(intermediate_relation, sql) }}
+    {{ create_view_as(target_relation, sql) }}
   {%- endcall %}
-
-  -- cleanup
-  -- move the existing view out of the way
-  {% if old_relation is not none %}
-    {{ adapter.rename_relation(target_relation, backup_relation) }}
-  {% endif %}
-  {{ adapter.rename_relation(intermediate_relation, target_relation) }}
 
   {% do persist_docs(target_relation, model) %}
 
