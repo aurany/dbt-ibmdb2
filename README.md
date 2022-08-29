@@ -12,7 +12,15 @@ This is an experimental plugin:
 
 Please read these docs carefully and use at your own risk. [Issues](https://github.com/aurany/dbt-ibmdb2/issues/new) welcome!
 
-**TODO**
+**TODO high priority**
+- [X] New testing framework/pytest
+- [ ] Move ibmdb2-utils to this repo
+- [ ] Add tests for dbt_utils
+- [ ] Add tests for documentation
+- [ ] Support TLS connections/certificates
+- [ ] Implement method and tests for connection retry logic
+
+**TODO lower priority**
 - [ ] Implement support for quoting on tables and schemas
 - [ ] Check compatibility with DB2 for z/OS
 
