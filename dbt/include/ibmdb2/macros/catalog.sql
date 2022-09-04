@@ -19,8 +19,8 @@
         TABNAME,
         OWNER,
         CASE
-          WHEN TYPE = 'T' THEN 'table'
-          WHEN TYPE = 'V' THEN 'view'
+          WHEN TYPE = 'T' THEN 'TABLE' -- upcase here to work with tests
+          WHEN TYPE = 'V' THEN 'VIEW'  -- upcase here to work with tests
         END AS TYPE
       FROM SYSCAT.TABLES
       WHERE TYPE IN('T', 'V')

@@ -7,20 +7,19 @@ This plugin ports [dbt](https://getdbt.com) functionality to IBM DB2.
 
 This is an experimental plugin:
 - We have not tested it extensively
-- Tested with [dbt-adapter-tests](https://pypi.org/project/pytest-dbt-adapter/) and DB2 LUW on Mac OS+RHEL8
-- Compatiblity with other [dbt packages](https://hub.getdbt.com/) (like [dbt_utils](https://hub.getdbt.com/fishtown-analytics/dbt_utils/latest/)) is only partially tested
+- Only basic [tests](https://github.com/aurany/dbt-ibmdb2/tree/master/test) are implemented
+- Compatibility with other [dbt packages](https://hub.getdbt.com/) (like [dbt_utils](https://hub.getdbt.com/fishtown-analytics/dbt_utils/latest/)) is only partially tested
 
 Please read these docs carefully and use at your own risk. [Issues](https://github.com/aurany/dbt-ibmdb2/issues/new) welcome!
 
-**TODO high priority**
+**TODO**
+- [X] Support TLS connections/certificates
+- [X] Bump to dbt 1.2.X
 - [X] New testing framework/pytest
+- [ ] Add tests for documentation
 - [ ] Move ibmdb2-utils to this repo
 - [ ] Add tests for dbt_utils
-- [ ] Add tests for documentation
-- [ ] Support TLS connections/certificates
 - [ ] Implement method and tests for connection retry logic
-
-**TODO lower priority**
 - [ ] Implement support for quoting on tables and schemas
 - [ ] Check compatibility with DB2 for z/OS
 

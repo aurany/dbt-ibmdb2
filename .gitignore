@@ -3,9 +3,10 @@
 .tox
 .venv
 
-database
-drivers
+db2/database
+db2/keystore
 logs
+test.env
 
 __pycache__
 .DS_Store

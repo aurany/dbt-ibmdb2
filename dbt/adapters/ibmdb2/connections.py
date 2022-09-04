@@ -17,17 +17,18 @@ class IBMDB2Credentials(Credentials):
     host: str
     database: str
     schema: str
-    username: str
+    user: str
     password: str
     port: int = 50000
     protocol: str = 'TCPIP'
+    extra_connect_opts: str = None
 
     @property
     def type(self):
         return 'ibmdb2'
 
     def _connection_keys(self):
-        return ('database', 'schema', 'host', 'port', 'protocol', 'username', 'password')
+        return ('host', 'database', 'schema', 'user', 'password', 'port', 'protocol', 'extra_connect_opts')
 
 
 class IBMDB2ConnectionManager(SQLConnectionManager):
@@ -61,8 +62,11 @@ class IBMDB2ConnectionManager(SQLConnectionManager):
             con_str += f";HOSTNAME={credentials.host}"
             con_str += f";PORT={credentials.port}"
             con_str += f";PROTOCOL={credentials.protocol}"
-            con_str += f";UID={credentials.username}"
+            con_str += f";UID={credentials.user}"
             con_str += f";PWD={credentials.password}"
+
+            if credentials.extra_connect_opts is not None and credentials.extra_connect_opts != "":
+                con_str += f";{credentials.extra_connect_opts}"
 
             handle = ibm_db_dbi.connect(con_str, '', '')
 
