@@ -7,21 +7,10 @@ This plugin ports [dbt](https://getdbt.com) functionality to IBM DB2.
 
 This is an experimental plugin:
 - We have not tested it extensively
-- Only basic [tests](https://github.com/aurany/dbt-ibmdb2/tree/master/test) are implemented
+- Only basic tests are implemented
 - Compatibility with other [dbt packages](https://hub.getdbt.com/) (like [dbt_utils](https://hub.getdbt.com/fishtown-analytics/dbt_utils/latest/)) is only partially tested
 
 Please read these docs carefully and use at your own risk. [Issues](https://github.com/aurany/dbt-ibmdb2/issues/new) welcome!
-
-**TODO**
-- [X] Support TLS connections/certificates
-- [X] Bump to dbt 1.2.X
-- [X] New testing framework/pytest
-- [ ] Add tests for documentation
-- [ ] Move ibmdb2-utils to this repo
-- [ ] Add tests for dbt_utils
-- [ ] Implement method and tests for connection retry logic
-- [ ] Implement support for quoting on tables and schemas
-- [ ] Check compatibility with DB2 for z/OS
 
 Table of Contents
 =================
@@ -56,6 +45,7 @@ $ pip install dbt-ibmdb2
 
 Notes:
 - dbt-ibmdb2 is built on the ibm_db python package and there are some known encoding issues related to z/OS.
+- schema and table names must be in uppercase
 
 ### Configuring your profile
 
@@ -76,6 +66,7 @@ your_profile_name:
       protocol: TCPIP
       username: my_username
       password: my_password
+      extra_connect_opts:
 ```
 
 | Option          | Description                                                                         | Required?                                                          | Example                                        |
@@ -88,10 +79,17 @@ your_profile_name:
 | protocol        | Protocol to use                                                                     | Optional                                                           | `TCPIP`                                        |
 | username        | The username to use to connect to the server                                        | Required                                                           | `my-username`                                  |
 | password        | The password to use for authenticating to the server                                | Required                                                           | `my-password`                                  |
+| extra_connect_opts        | Extra connection options                                | Optional                                                           | `Security=SSL;SSLClientKeyStoreDB=<path-to-client-keystore>;SSLClientKeyStash=<path-to-client-keystash>`                                  |
 
-### Running Tests
+### Setup dev-environment and run tests
 
-See [test/README.md](test/README.md) for details on running the integration tests.
+Make sure you have docker and poetry installed.
+
+```
+make install
+make test
+make uninstall
+```
 
 ### Reporting bugs
 

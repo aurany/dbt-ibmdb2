@@ -24,8 +24,12 @@ install:
 		/bin/bash -c 'cd && source .bashrc && sh /resources/setup_ssl.sh'
 	@poetry install
 
+restart-db2:
+	@docker restart dbt-db2
+
 uninstall:
 	@docker rm dbt-db2 --force
+	@docker rmi ibmcom/db2:11.5.7.0 --force
 	@rm -rf db2/database/*
 	@rm -rf db2/keystore/*
 	@rm -rf .tox .venv .pytest_cache logs
