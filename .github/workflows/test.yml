@@ -41,7 +41,6 @@ jobs:
     - name: Install dependencies
       run: |
         curl -sSL https://install.python-poetry.org | python3
-        source $HOME/.poetry/env
         poetry install
 
     - name: Wait some time for DB2
@@ -50,11 +49,7 @@ jobs:
         time: '5m'
 
     - name: Run tests
-      run: |
-        source $HOME/.poetry/env
-        poetry run tox
+      run: poetry run tox
 
     - name: Build wheels
-      run: |
-        source $HOME/.poetry/env
-        poetry build
+      run: poetry build
