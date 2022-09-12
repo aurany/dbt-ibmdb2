@@ -9,6 +9,11 @@ from dbt.contracts.connection import Connection
 from dbt.adapters.sql import SQLConnectionManager
 from dbt.logger import GLOBAL_LOGGER as logger
 
+from typing import (
+    Type,
+    Iterable
+)
+
 import ibm_db
 import ibm_db_dbi
 
@@ -57,7 +62,7 @@ class IBMDB2ConnectionManager(SQLConnectionManager):
 
         credentials = connection.credentials
 
-        try:
+        def connect():
             con_str = f"DATABASE={credentials.database}"
             con_str += f";HOSTNAME={credentials.host}"
             con_str += f";PORT={credentials.port}"
@@ -70,16 +75,18 @@ class IBMDB2ConnectionManager(SQLConnectionManager):
 
             handle = ibm_db_dbi.connect(con_str, '', '')
 
-            connection.state = 'open'
-            connection.handle = handle
+            return handle
 
-        except Exception as exc:
-            connection.state = 'fail'
-            connection.handle = None
-            logger.debug("Error connecting to database: {}".format(str(exc)))
-            raise dbt.exceptions.FailedToConnectException(str(exc))
+        retryable_exceptions = [ibm_db_dbi.OperationalError,]
 
-        return connection
+        return cls.retry_connection(
+            connection,
+            connect=connect,
+            logger=logger,
+            retry_limit=3,
+            retry_timeout=5,
+            retryable_exceptions=retryable_exceptions
+        )
 
     @classmethod
     def cancel(self, connection):
