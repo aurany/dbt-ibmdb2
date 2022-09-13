@@ -18,8 +18,7 @@ Table of Contents
    * [Installation](#installation)
    * [Supported features](#supported-features)
    * [Configuring your profile](#configuring-your-profile)
-   * [Notes](#notes)
-   * [Running Tests](#running-tests)
+   * [Running Tests](#setup-dev-environment-and-run-tests)
    * [Reporting bugs](#reporting-bugs)
 
 ### Installation
@@ -43,7 +42,7 @@ $ pip install dbt-ibmdb2
 | ✅ | 🤷 | Docs generate               |
 | ✅ | 🤷 | Snapshots                   |
 
-Notes:
+*Notes:*
 - dbt-ibmdb2 is built on the ibm_db python package and there are some known encoding issues related to z/OS.
 - schema and table names must be in uppercase
 
@@ -66,7 +65,7 @@ your_profile_name:
       protocol: TCPIP
       username: my_username
       password: my_password
-      extra_connect_opts:
+      extra_connect_opts: my_extra_config_options
 ```
 
 | Option          | Description                                                                         | Required?                                                          | Example                                        |
@@ -81,9 +80,9 @@ your_profile_name:
 | password        | The password to use for authenticating to the server                                | Required                                                           | `my-password`                                  |
 | extra_connect_opts        | Extra connection options                                | Optional                                                           | `Security=SSL;SSLClientKeyStoreDB=<path-to-client-keystore>;SSLClientKeyStash=<path-to-client-keystash>`                                  |
 
-### Setup dev-environment and run tests
+### Setup dev environment and run tests
 
-Make sure you have docker and poetry installed.
+Make sure you have docker and poetry installed globally.
 
 ```
 make install
