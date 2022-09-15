@@ -7,14 +7,10 @@ This plugin ports [dbt](https://getdbt.com) functionality to IBM DB2.
 
 This is an experimental plugin:
 - We have not tested it extensively
-- Tested with [dbt-adapter-tests](https://pypi.org/project/pytest-dbt-adapter/) and DB2 LUW on Mac OS+RHEL8
-- Compatiblity with other [dbt packages](https://hub.getdbt.com/) (like [dbt_utils](https://hub.getdbt.com/fishtown-analytics/dbt_utils/latest/)) is only partially tested
+- Only basic tests are implemented
+- Compatibility with other [dbt packages](https://hub.getdbt.com/) (like [dbt_utils](https://hub.getdbt.com/fishtown-analytics/dbt_utils/latest/)) is only partially tested
 
 Please read these docs carefully and use at your own risk. [Issues](https://github.com/aurany/dbt-ibmdb2/issues/new) welcome!
-
-**TODO**
-- [ ] Implement support for quoting on tables and schemas
-- [ ] Check compatibility with DB2 for z/OS
 
 Table of Contents
 =================
@@ -22,8 +18,7 @@ Table of Contents
    * [Installation](#installation)
    * [Supported features](#supported-features)
    * [Configuring your profile](#configuring-your-profile)
-   * [Notes](#notes)
-   * [Running Tests](#running-tests)
+   * [Running Tests](#setup-dev-environment-and-run-tests)
    * [Reporting bugs](#reporting-bugs)
 
 ### Installation
@@ -47,8 +42,9 @@ $ pip install dbt-ibmdb2
 | ✅ | 🤷 | Docs generate               |
 | ✅ | 🤷 | Snapshots                   |
 
-Notes:
+*Notes:*
 - dbt-ibmdb2 is built on the ibm_db python package and there are some known encoding issues related to z/OS.
+- schema and table names must be in uppercase
 
 ### Configuring your profile
 
@@ -69,6 +65,7 @@ your_profile_name:
       protocol: TCPIP
       username: my_username
       password: my_password
+      extra_connect_opts: my_extra_config_options
 ```
 
 | Option          | Description                                                                         | Required?                                                          | Example                                        |
@@ -81,10 +78,17 @@ your_profile_name:
 | protocol        | Protocol to use                                                                     | Optional                                                           | `TCPIP`                                        |
 | username        | The username to use to connect to the server                                        | Required                                                           | `my-username`                                  |
 | password        | The password to use for authenticating to the server                                | Required                                                           | `my-password`                                  |
+| extra_connect_opts        | Extra connection options                                | Optional                                                           | `Security=SSL;SSLClientKeyStoreDB=<path-to-client-keystore>;SSLClientKeyStash=<path-to-client-keystash>`                                  |
 
-### Running Tests
+### Setup dev environment and run tests
 
-See [test/README.md](test/README.md) for details on running the integration tests.
+Make sure you have docker and poetry installed globally.
+
+```
+make install
+make test
+make uninstall
+```
 
 ### Reporting bugs
 

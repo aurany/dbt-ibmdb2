@@ -190,11 +190,6 @@
 {% endmacro %}
 
 
-{% macro ibmdb2__current_timestamp() -%}
-  CURRENT_TIMESTAMP
-{%- endmacro %}
-
-
 {% macro ibmdb2__make_temp_relation(base_relation, suffix) %}
     {% set tmp_identifier = 'DBT_TMP__' ~ base_relation.identifier %}
     {% set tmp_relation = base_relation.incorporate(path={"identifier": tmp_identifier}) -%}
@@ -219,4 +214,14 @@
         truncate table {{ relation.quote(schema=False, identifier=False) }}
         immediate
     {%- endcall %}
+{% endmacro %}
+
+
+{% macro ibmdb2__current_timestamp() %}
+    current_timestamp
+{% endmacro %}
+
+
+{% macro ibmdb2__current_timestamp_in_utc() %}
+    current timestamp - current timezone
 {% endmacro %}

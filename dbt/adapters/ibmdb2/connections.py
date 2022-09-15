@@ -9,6 +9,11 @@ from dbt.contracts.connection import Connection
 from dbt.adapters.sql import SQLConnectionManager
 from dbt.logger import GLOBAL_LOGGER as logger
 
+from typing import (
+    Type,
+    Iterable
+)
+
 import ibm_db
 import ibm_db_dbi
 
@@ -17,17 +22,18 @@ class IBMDB2Credentials(Credentials):
     host: str
     database: str
     schema: str
-    username: str
+    user: str
     password: str
     port: int = 50000
     protocol: str = 'TCPIP'
+    extra_connect_opts: str = None
 
     @property
     def type(self):
         return 'ibmdb2'
 
     def _connection_keys(self):
-        return ('database', 'schema', 'host', 'port', 'protocol', 'username', 'password')
+        return ('host', 'database', 'schema', 'user', 'password', 'port', 'protocol', 'extra_connect_opts')
 
 
 class IBMDB2ConnectionManager(SQLConnectionManager):
@@ -56,26 +62,31 @@ class IBMDB2ConnectionManager(SQLConnectionManager):
 
         credentials = connection.credentials
 
-        try:
+        def connect():
             con_str = f"DATABASE={credentials.database}"
             con_str += f";HOSTNAME={credentials.host}"
             con_str += f";PORT={credentials.port}"
             con_str += f";PROTOCOL={credentials.protocol}"
-            con_str += f";UID={credentials.username}"
+            con_str += f";UID={credentials.user}"
             con_str += f";PWD={credentials.password}"
+
+            if credentials.extra_connect_opts is not None and credentials.extra_connect_opts != "":
+                con_str += f";{credentials.extra_connect_opts}"
 
             handle = ibm_db_dbi.connect(con_str, '', '')
 
-            connection.state = 'open'
-            connection.handle = handle
+            return handle
 
-        except Exception as exc:
-            connection.state = 'fail'
-            connection.handle = None
-            logger.debug("Error connecting to database: {}".format(str(exc)))
-            raise dbt.exceptions.FailedToConnectException(str(exc))
+        retryable_exceptions = [ibm_db_dbi.OperationalError,]
 
-        return connection
+        return cls.retry_connection(
+            connection,
+            connect=connect,
+            logger=logger,
+            retry_limit=3,
+            retry_timeout=5,
+            retryable_exceptions=retryable_exceptions
+        )
 
     @classmethod
     def cancel(self, connection):
