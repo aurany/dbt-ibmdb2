@@ -11,7 +11,8 @@ from dbt.logger import GLOBAL_LOGGER as logger
 
 from typing import (
     Type,
-    Iterable
+    Iterable,
+    Optional
 )
 
 import ibm_db
@@ -26,7 +27,7 @@ class IBMDB2Credentials(Credentials):
     password: str
     port: int = 50000
     protocol: str = 'TCPIP'
-    extra_connect_opts: str = None
+    extra_connect_opts: Optional[str] = None
 
     @property
     def type(self):
@@ -74,6 +75,7 @@ class IBMDB2ConnectionManager(SQLConnectionManager):
                 con_str += f";{credentials.extra_connect_opts}"
 
             handle = ibm_db_dbi.connect(con_str, '', '')
+            handle.set_autocommit(False)
 
             return handle
 

@@ -176,6 +176,7 @@
       ) THEN
         PREPARE stmt FROM 'DROP TABLE {{ relation.quote(schema=False, identifier=False) }}';
         EXECUTE stmt;
+        COMMIT;
       ELSEIF EXISTS (
         SELECT TABNAME
         FROM SYSCAT.TABLES
@@ -183,6 +184,7 @@
       ) THEN
         PREPARE stmt FROM 'DROP VIEW {{ relation.quote(schema=False, identifier=False) }}';
         EXECUTE stmt;
+        COMMIT;
       END IF;
     END
 
@@ -211,17 +213,17 @@
 
 {% macro ibmdb2__truncate_relation(relation) %}
     {% call statement('truncate_relation') -%}
-        truncate table {{ relation.quote(schema=False, identifier=False) }}
-        immediate
+        TRUNCATE TABLE {{ relation.quote(schema=False, identifier=False) }}
+        IMMEDIATE
     {%- endcall %}
 {% endmacro %}
 
 
 {% macro ibmdb2__current_timestamp() %}
-    current_timestamp
+    CURRENT_TIMESTAMP
 {% endmacro %}
 
 
 {% macro ibmdb2__current_timestamp_in_utc() %}
-    current timestamp - current timezone
+    CURRENT TIMESTAMP - CURRENT TIMEZONE
 {% endmacro %}

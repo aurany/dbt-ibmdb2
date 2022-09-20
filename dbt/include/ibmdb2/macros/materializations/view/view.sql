@@ -30,7 +30,7 @@
   {{ run_hooks(pre_hooks, inside_transaction=False) }}
 
   -- drop the temp relations if they exists for some reason
-  {{ adapter.drop_relation(backup_relation) }}
+  {{ drop_relation_if_exists(backup_relation) }}
 
   -- `BEGIN` happens here:
   {{ run_hooks(pre_hooks, inside_transaction=True) }}
@@ -54,10 +54,9 @@
 
   {{ run_hooks(post_hooks, inside_transaction=True) }}
 
-  {# rasmus: moved here before commit #}
-  {{ drop_relation_if_exists(backup_relation) }}
-
   {{ adapter.commit() }}
+
+  {{ drop_relation_if_exists(backup_relation) }}
 
   {{ run_hooks(post_hooks, inside_transaction=False) }}
 
