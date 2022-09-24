@@ -3,7 +3,7 @@
   {% set sql -%}
         SELECT COUNT(*)
         FROM SYSCAT.SCHEMATA
-        WHERE UPPER(SCHEMANAME) = UPPER('{{ schema }}')
+        WHERE SCHEMANAME = '{{ schema }}'
   {%- endset %}
   {{ return(run_query(sql)) }}
 {% endmacro %}
@@ -16,9 +16,9 @@
      IF NOT EXISTS (
        SELECT SCHEMANAME
        FROM SYSCAT.SCHEMATA
-       WHERE SCHEMANAME = UPPER('{{ relation.schema }}')
+       WHERE SCHEMANAME = '{{ relation.schema }}'
      ) THEN
-        PREPARE stmt FROM 'CREATE SCHEMA {{ relation.quote(schema=False).schema }}';
+        PREPARE stmt FROM 'CREATE SCHEMA {{ relation.schema }}';
         EXECUTE stmt;
      END IF;
   END
@@ -37,7 +37,7 @@
         TABSCHEMA,
         (CASE WHEN TYPE='T' THEN 'TABLE' ELSE 'VIEW' END) AS TYPE
       FROM SYSCAT.TABLES t
-      WHERE TABSCHEMA = UPPER('{{ relation.schema }}')
+      WHERE TABSCHEMA = '{{ relation.schema }}'
   		DO
   			PREPARE stmt FROM 'DROP '||t.TYPE||' '||t.TABSCHEMA||'.'||t.TABNAME;
   			EXECUTE stmt;
@@ -45,7 +45,7 @@
     IF EXISTS (
       SELECT SCHEMANAME
       FROM SYSCAT.SCHEMATA
-      WHERE SCHEMANAME = UPPER('{{ relation.schema }}')
+      WHERE SCHEMANAME = '{{ relation.schema }}'
     ) THEN
       PREPARE stmt FROM 'DROP SCHEMA {{ relation.schema }} RESTRICT';
       EXECUTE stmt;
@@ -65,8 +65,7 @@
   {{ sql_header if sql_header is not none }}
 
   {# Ignore temporary table type #}
-  CREATE TABLE {{ relation.quote(schema=False, identifier=False) }}
-    AS (
+  CREATE TABLE {{ relation }} AS (
     {{ sql }}
   )
   WITH DATA
@@ -84,7 +83,7 @@
   {%- set sql_header = config.get('sql_header', none) -%}
 
   {{ sql_header if sql_header is not none }}
-  CREATE VIEW {{ relation.quote(schema=False, identifier=False) }} AS
+  CREATE VIEW {{ relation }} AS
   {{ sql }}
 
 {% endmacro %}
@@ -100,9 +99,9 @@
           LENGTH AS "numeric_precision",
           SCALE AS "numeric_scale"
       FROM SYSCAT.COLUMNS
-      WHERE TABNAME = UPPER('{{ relation.identifier }}')
+      WHERE TABNAME = '{{ relation.identifier }}'
         {% if relation.schema %}
-        AND TABSCHEMA = UPPER('{{ relation.schema }}')
+        AND TABSCHEMA = '{{ relation.schema }}'
         {% endif %}
       ORDER BY colno
 
@@ -116,16 +115,16 @@
   {% call statement('list_relations_without_caching', fetch_result=True) -%}
 
   SELECT
-    TRIM(LOWER(CURRENT_SERVER)) AS "database",
-    TRIM(LOWER(TABNAME)) as "name",
-    TRIM(LOWER(TABSCHEMA)) as "schema",
+    TRIM(CURRENT_SERVER) AS "database",
+    TRIM(TABNAME) as "name",
+    TRIM(TABSCHEMA) as "schema",
     CASE
       WHEN TYPE = 'T' THEN 'table'
       WHEN TYPE = 'V' THEN 'view'
     END AS "table_type"
   FROM SYSCAT.TABLES
   WHERE
-    TABSCHEMA = UPPER('{{ schema_relation.schema }}') AND
+    TABSCHEMA = '{{ schema_relation.schema }}' AND
     TYPE IN('T', 'V')
   {% endcall %}
   {{ return(load_result('list_relations_without_caching').table) }}
@@ -142,9 +141,9 @@
       IF EXISTS (
         SELECT TABNAME
         FROM SYSCAT.TABLES
-        WHERE TABNAME = UPPER('{{ from_relation.identifier }}') AND TABSCHEMA = UPPER('{{ from_relation.schema }}') AND TYPE = 'T'
+        WHERE TABNAME = '{{ from_relation.identifier }}' AND TABSCHEMA = '{{ from_relation.schema }}' AND TYPE = 'T'
       ) THEN
-        SET rename_stmt = 'RENAME TABLE {{ from_relation.quote(schema=False, identifier=False) }} TO {{ to_relation.quote(identifier=False).identifier }}';
+        SET rename_stmt = 'RENAME TABLE {{ from_relation }} TO {{ to_relation.identifier }}';
         PREPARE stmt FROM rename_stmt;
         EXECUTE stmt;
       END IF;
@@ -172,17 +171,17 @@
       IF EXISTS (
         SELECT TABNAME
         FROM SYSCAT.TABLES
-        WHERE TABNAME = UPPER('{{ relation.identifier }}') AND TABSCHEMA = UPPER('{{ relation.schema }}') AND TYPE = 'T'
+        WHERE TABNAME = '{{ relation.identifier }}' AND TABSCHEMA = '{{ relation.schema }}' AND TYPE = 'T'
       ) THEN
-        PREPARE stmt FROM 'DROP TABLE {{ relation.quote(schema=False, identifier=False) }}';
+        PREPARE stmt FROM 'DROP TABLE {{ relation }}';
         EXECUTE stmt;
         COMMIT;
       ELSEIF EXISTS (
         SELECT TABNAME
         FROM SYSCAT.TABLES
-        WHERE TABNAME = UPPER('{{ relation.identifier }}') AND TABSCHEMA = UPPER('{{ relation.schema }}') AND TYPE = 'V'
+        WHERE TABNAME = '{{ relation.identifier }}' AND TABSCHEMA = '{{ relation.schema }}' AND TYPE = 'V'
       ) THEN
-        PREPARE stmt FROM 'DROP VIEW {{ relation.quote(schema=False, identifier=False) }}';
+        PREPARE stmt FROM 'DROP VIEW {{ relation }}';
         EXECUTE stmt;
         COMMIT;
       END IF;
@@ -193,7 +192,7 @@
 
 
 {% macro ibmdb2__make_temp_relation(base_relation, suffix) %}
-    {% set tmp_identifier = 'DBT_TMP__' ~ base_relation.identifier %}
+    {% set tmp_identifier = 'dbt_tmp__' ~ base_relation.identifier %}
     {% set tmp_relation = base_relation.incorporate(path={"identifier": tmp_identifier}) -%}
     {% do return(tmp_relation) %}
 {% endmacro %}
@@ -213,7 +212,7 @@
 
 {% macro ibmdb2__truncate_relation(relation) %}
     {% call statement('truncate_relation') -%}
-        TRUNCATE TABLE {{ relation.quote(schema=False, identifier=False) }}
+        TRUNCATE TABLE {{ relation }}
         IMMEDIATE
     {%- endcall %}
 {% endmacro %}
