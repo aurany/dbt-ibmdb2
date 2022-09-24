@@ -27,8 +27,8 @@
 
 
   -- drop the temp relations if they exists for some reason
-  {{ adapter.drop_relation(intermediate_relation) }}
-  {{ adapter.drop_relation(backup_relation) }}
+  {{ drop_relation_if_exists(intermediate_relation) }}
+  {{ drop_relation_if_exists(backup_relation) }}
 
   {{ run_hooks(pre_hooks, inside_transaction=False) }}
 
@@ -48,19 +48,17 @@
         {{ adapter.rename_relation(old_relation, backup_relation) }}
     {% endif %}
   {% endif %}
-  
+
   {{ adapter.rename_relation(intermediate_relation, target_relation) }}
 
   {{ run_hooks(post_hooks, inside_transaction=True) }}
 
   {% do persist_docs(target_relation, model) %}
 
-  -- finally, drop the existing/backup relation after the commit
-  {# rasmus: moved here before commit #}
-  {{ drop_relation_if_exists(backup_relation) }}
-
   -- `COMMIT` happens here
   {{ adapter.commit() }}
+
+  {{ drop_relation_if_exists(backup_relation) }}
 
   {{ run_hooks(post_hooks, inside_transaction=False) }}
 

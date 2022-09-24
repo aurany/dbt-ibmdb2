@@ -21,7 +21,12 @@
       {% set backup_relation = existing_relation.incorporate(path={"identifier": backup_identifier}) %}
       {% do adapter.drop_relation(backup_relation) %}
 
-      {% do adapter.rename_relation(target_relation, backup_relation) %}
+      {% if existing_relation.is_view %}
+            {% do adapter.drop_relation(existing_relation) %}
+      {% else %}
+            {% do adapter.rename_relation(existing_relation, backup_relation) %}
+      {% endif %}
+
       {% set build_sql = create_table_as(False, target_relation, sql) %}
       {% do to_drop.append(backup_relation) %}
   {% else %}
@@ -43,13 +48,13 @@
 
   {{ run_hooks(post_hooks, inside_transaction=True) }}
 
-  {# rasmus: moved here before commit #}
-  {% for rel in to_drop %}
-      {% do adapter.drop_relation(rel) %}
-  {% endfor %}
-
   -- `COMMIT` happens here
   {% do adapter.commit() %}
+
+  {% for rel in to_drop %}
+      {% do adapter.truncate_relation(rel) %}
+      {% do adapter.drop_relation(rel) %}
+  {% endfor %}
 
   {{ run_hooks(post_hooks, inside_transaction=False) }}
 

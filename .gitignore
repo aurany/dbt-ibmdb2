@@ -6,6 +6,7 @@
 db2/database
 db2/keystore
 logs
+jaffle_shop
 
 __pycache__
 .DS_Store
