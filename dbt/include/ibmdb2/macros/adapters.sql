@@ -1,5 +1,15 @@
 
+{% macro case_relation_part(quoting, relation_part) %}
+  {% if quoting == False %}
+    {%- set relation_part = relation_part|upper -%}
+  {% endif %}
+  {{ return(relation_part) }}
+{% endmacro %}
+
 {% macro ibmdb2__check_schema_exists(information_schema, schema) -%}
+
+  {%- set schema = case_relation_part(information_schema.quote_policy['schema'], schema) -%}
+
   {% set sql -%}
         SELECT COUNT(*)
         FROM SYSCAT.SCHEMATA
@@ -12,13 +22,15 @@
 {% macro ibmdb2__create_schema(relation) -%}
   {%- call statement('create_schema') -%}
 
+  {%- set schema = case_relation_part(relation.quote_policy['schema'], relation.without_identifier()) -%}
+
   BEGIN
      IF NOT EXISTS (
        SELECT SCHEMANAME
        FROM SYSCAT.SCHEMATA
-       WHERE SCHEMANAME = '{{ relation.schema }}'
+       WHERE SCHEMANAME = '{{ schema }}'
      ) THEN
-        PREPARE stmt FROM 'CREATE SCHEMA {{ relation.without_identifier() }}';
+        PREPARE stmt FROM 'CREATE SCHEMA {{ schema }}';
         EXECUTE stmt;
      END IF;
   END
@@ -30,6 +42,8 @@
 {% macro ibmdb2__drop_schema(relation) -%}
   {%- call statement('drop_schema') -%}
 
+  {%- set schema = case_relation_part(relation.quote_policy['schema'], relation.schema) -%}
+
   BEGIN
   	FOR t AS
       SELECT
@@ -37,7 +51,7 @@
         TABSCHEMA,
         (CASE WHEN TYPE='T' THEN 'TABLE' ELSE 'VIEW' END) AS TYPE
       FROM SYSCAT.TABLES t
-      WHERE TABSCHEMA = '{{ relation.schema }}'
+      WHERE TABSCHEMA = '{{ schema }}'
   		DO
   			PREPARE stmt FROM 'DROP '||t.TYPE||' '||t.TABSCHEMA||'.'||t.TABNAME;
   			EXECUTE stmt;
@@ -45,9 +59,9 @@
     IF EXISTS (
       SELECT SCHEMANAME
       FROM SYSCAT.SCHEMATA
-      WHERE SCHEMANAME = '{{ relation.schema }}'
+      WHERE SCHEMANAME = '{{ schema }}'
     ) THEN
-      PREPARE stmt FROM 'DROP SCHEMA {{ relation.schema }} RESTRICT';
+      PREPARE stmt FROM 'DROP SCHEMA {{ schema }} RESTRICT';
       EXECUTE stmt;
     END IF;
   END
