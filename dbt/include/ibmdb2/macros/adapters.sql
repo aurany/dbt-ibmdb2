@@ -18,7 +18,7 @@
        FROM SYSCAT.SCHEMATA
        WHERE SCHEMANAME = '{{ relation.schema }}'
      ) THEN
-        PREPARE stmt FROM 'CREATE SCHEMA {{ relation.schema }}';
+        PREPARE stmt FROM 'CREATE SCHEMA {{ relation.without_identifier() }}';
         EXECUTE stmt;
      END IF;
   END
@@ -115,7 +115,7 @@
   {% call statement('list_relations_without_caching', fetch_result=True) -%}
 
   SELECT
-    TRIM(CURRENT_SERVER) AS "database",
+    '{{ schema_relation.database }}' AS "database",
     TRIM(TABNAME) as "name",
     TRIM(TABSCHEMA) as "schema",
     CASE
@@ -134,20 +134,13 @@
 {% macro ibmdb2__rename_relation(from_relation, to_relation) -%}
   {% call statement('rename_relation') -%}
 
-    {# Not possible to rename views in DB2 #}
-    BEGIN
-      DECLARE rename_stmt VARCHAR(1000);
+  {% if from_relation.is_table %}
+    RENAME TABLE {{ from_relation }} TO {{ to_relation.replace_path(schema=None) }}
+  {% endif %}
 
-      IF EXISTS (
-        SELECT TABNAME
-        FROM SYSCAT.TABLES
-        WHERE TABNAME = '{{ from_relation.identifier }}' AND TABSCHEMA = '{{ from_relation.schema }}' AND TYPE = 'T'
-      ) THEN
-        SET rename_stmt = 'RENAME TABLE {{ from_relation }} TO {{ to_relation.identifier }}';
-        PREPARE stmt FROM rename_stmt;
-        EXECUTE stmt;
-      END IF;
-    END
+  {% if from_relation.is_view %}
+    {% do exceptions.raise_compiler_error('Not possible to rename DB2 views.') %}
+  {% endif %}
 
   {%- endcall %}
 {% endmacro %}
@@ -171,17 +164,14 @@
       IF EXISTS (
         SELECT TABNAME
         FROM SYSCAT.TABLES
-        WHERE TABNAME = '{{ relation.identifier }}' AND TABSCHEMA = '{{ relation.schema }}' AND TYPE = 'T'
+        WHERE
+          TABSCHEMA = '{{ relation.schema }}' AND
+          TABNAME = '{{ relation.identifier }}' AND
+          TYPE = (CASE
+            WHEN '{{ relation.type }}' = 'view' THEN 'V' ELSE 'T'
+          END)
       ) THEN
-        PREPARE stmt FROM 'DROP TABLE {{ relation }}';
-        EXECUTE stmt;
-        COMMIT;
-      ELSEIF EXISTS (
-        SELECT TABNAME
-        FROM SYSCAT.TABLES
-        WHERE TABNAME = '{{ relation.identifier }}' AND TABSCHEMA = '{{ relation.schema }}' AND TYPE = 'V'
-      ) THEN
-        PREPARE stmt FROM 'DROP VIEW {{ relation }}';
+        PREPARE stmt FROM 'DROP {{ relation.type | upper }} {{ relation }}';
         EXECUTE stmt;
         COMMIT;
       END IF;
