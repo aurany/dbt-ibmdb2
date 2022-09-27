@@ -8,6 +8,7 @@
 
 {% macro ibmdb2__check_schema_exists(information_schema, schema) -%}
 
+  {# This schema will ignore quoting and therefore also upper vs lowercase #}
   {%- set schema = case_relation_part(information_schema.quote_policy['schema'], schema) -%}
 
   {% set sql -%}
@@ -22,6 +23,7 @@
 {% macro ibmdb2__create_schema(relation) -%}
   {%- call statement('create_schema') -%}
 
+  {# This schema will ignore quoting and therefore also upper vs lowercase #}
   {%- set schema = case_relation_part(relation.quote_policy['schema'], relation.without_identifier()) -%}
 
   BEGIN
@@ -42,6 +44,7 @@
 {% macro ibmdb2__drop_schema(relation) -%}
   {%- call statement('drop_schema') -%}
 
+  {# This schema will ignore quoting and therefore also upper vs lowercase #}
   {%- set schema = case_relation_part(relation.quote_policy['schema'], relation.schema) -%}
 
   BEGIN
