@@ -1,9 +1,20 @@
 
+{% macro case_relation_part(quoting, relation_part) %}
+  {% if quoting == False %}
+    {%- set relation_part = relation_part|upper -%}
+  {% endif %}
+  {{ return(relation_part) }}
+{% endmacro %}
+
 {% macro ibmdb2__check_schema_exists(information_schema, schema) -%}
+
+  {# This schema will ignore quoting and therefore also upper vs lowercase #}
+  {%- set schema = case_relation_part(information_schema.quote_policy['schema'], schema) -%}
+
   {% set sql -%}
         SELECT COUNT(*)
         FROM SYSCAT.SCHEMATA
-        WHERE UPPER(SCHEMANAME) = UPPER('{{ schema }}')
+        WHERE SCHEMANAME = '{{ schema }}'
   {%- endset %}
   {{ return(run_query(sql)) }}
 {% endmacro %}
@@ -12,13 +23,16 @@
 {% macro ibmdb2__create_schema(relation) -%}
   {%- call statement('create_schema') -%}
 
+  {# This schema will ignore quoting and therefore also upper vs lowercase #}
+  {%- set schema = case_relation_part(relation.quote_policy['schema'], relation.without_identifier()) -%}
+
   BEGIN
      IF NOT EXISTS (
        SELECT SCHEMANAME
        FROM SYSCAT.SCHEMATA
-       WHERE SCHEMANAME = UPPER('{{ relation.schema }}')
+       WHERE SCHEMANAME = '{{ schema }}'
      ) THEN
-        PREPARE stmt FROM 'CREATE SCHEMA {{ relation.quote(schema=False).schema }}';
+        PREPARE stmt FROM 'CREATE SCHEMA {{ schema }}';
         EXECUTE stmt;
      END IF;
   END
@@ -30,6 +44,9 @@
 {% macro ibmdb2__drop_schema(relation) -%}
   {%- call statement('drop_schema') -%}
 
+  {# This schema will ignore quoting and therefore also upper vs lowercase #}
+  {%- set schema = case_relation_part(relation.quote_policy['schema'], relation.schema) -%}
+
   BEGIN
   	FOR t AS
       SELECT
@@ -37,7 +54,7 @@
         TABSCHEMA,
         (CASE WHEN TYPE='T' THEN 'TABLE' ELSE 'VIEW' END) AS TYPE
       FROM SYSCAT.TABLES t
-      WHERE TABSCHEMA = UPPER('{{ relation.schema }}')
+      WHERE TABSCHEMA = '{{ schema }}'
   		DO
   			PREPARE stmt FROM 'DROP '||t.TYPE||' '||t.TABSCHEMA||'.'||t.TABNAME;
   			EXECUTE stmt;
@@ -45,9 +62,9 @@
     IF EXISTS (
       SELECT SCHEMANAME
       FROM SYSCAT.SCHEMATA
-      WHERE SCHEMANAME = UPPER('{{ relation.schema }}')
+      WHERE SCHEMANAME = '{{ schema }}'
     ) THEN
-      PREPARE stmt FROM 'DROP SCHEMA {{ relation.schema }} RESTRICT';
+      PREPARE stmt FROM 'DROP SCHEMA {{ schema }} RESTRICT';
       EXECUTE stmt;
     END IF;
   END
@@ -65,8 +82,7 @@
   {{ sql_header if sql_header is not none }}
 
   {# Ignore temporary table type #}
-  CREATE TABLE {{ relation.quote(schema=False, identifier=False) }}
-    AS (
+  CREATE TABLE {{ relation }} AS (
     {{ sql }}
   )
   WITH DATA
@@ -84,7 +100,7 @@
   {%- set sql_header = config.get('sql_header', none) -%}
 
   {{ sql_header if sql_header is not none }}
-  CREATE VIEW {{ relation.quote(schema=False, identifier=False) }} AS
+  CREATE VIEW {{ relation }} AS
   {{ sql }}
 
 {% endmacro %}
@@ -100,9 +116,9 @@
           LENGTH AS "numeric_precision",
           SCALE AS "numeric_scale"
       FROM SYSCAT.COLUMNS
-      WHERE TABNAME = UPPER('{{ relation.identifier }}')
+      WHERE TABNAME = '{{ relation.identifier }}'
         {% if relation.schema %}
-        AND TABSCHEMA = UPPER('{{ relation.schema }}')
+        AND TABSCHEMA = '{{ relation.schema }}'
         {% endif %}
       ORDER BY colno
 
@@ -116,16 +132,16 @@
   {% call statement('list_relations_without_caching', fetch_result=True) -%}
 
   SELECT
-    TRIM(LOWER(CURRENT_SERVER)) AS "database",
-    TRIM(LOWER(TABNAME)) as "name",
-    TRIM(LOWER(TABSCHEMA)) as "schema",
+    '{{ schema_relation.database }}' AS "database",
+    TRIM(TABNAME) as "name",
+    TRIM(TABSCHEMA) as "schema",
     CASE
       WHEN TYPE = 'T' THEN 'table'
       WHEN TYPE = 'V' THEN 'view'
     END AS "table_type"
   FROM SYSCAT.TABLES
   WHERE
-    TABSCHEMA = UPPER('{{ schema_relation.schema }}') AND
+    TABSCHEMA = '{{ schema_relation.schema }}' AND
     TYPE IN('T', 'V')
   {% endcall %}
   {{ return(load_result('list_relations_without_caching').table) }}
@@ -135,20 +151,13 @@
 {% macro ibmdb2__rename_relation(from_relation, to_relation) -%}
   {% call statement('rename_relation') -%}
 
-    {# Not possible to rename views in DB2 #}
-    BEGIN
-      DECLARE rename_stmt VARCHAR(1000);
+  {% if from_relation.is_table %}
+    RENAME TABLE {{ from_relation }} TO {{ to_relation.replace_path(schema=None) }}
+  {% endif %}
 
-      IF EXISTS (
-        SELECT TABNAME
-        FROM SYSCAT.TABLES
-        WHERE TABNAME = UPPER('{{ from_relation.identifier }}') AND TABSCHEMA = UPPER('{{ from_relation.schema }}') AND TYPE = 'T'
-      ) THEN
-        SET rename_stmt = 'RENAME TABLE {{ from_relation.quote(schema=False, identifier=False) }} TO {{ to_relation.quote(identifier=False).identifier }}';
-        PREPARE stmt FROM rename_stmt;
-        EXECUTE stmt;
-      END IF;
-    END
+  {% if from_relation.is_view %}
+    {% do exceptions.raise_compiler_error('Not possible to rename DB2 views.') %}
+  {% endif %}
 
   {%- endcall %}
 {% endmacro %}
@@ -172,17 +181,14 @@
       IF EXISTS (
         SELECT TABNAME
         FROM SYSCAT.TABLES
-        WHERE TABNAME = UPPER('{{ relation.identifier }}') AND TABSCHEMA = UPPER('{{ relation.schema }}') AND TYPE = 'T'
+        WHERE
+          TABSCHEMA = '{{ relation.schema }}' AND
+          TABNAME = '{{ relation.identifier }}' AND
+          TYPE = (CASE
+            WHEN '{{ relation.type }}' = 'view' THEN 'V' ELSE 'T'
+          END)
       ) THEN
-        PREPARE stmt FROM 'DROP TABLE {{ relation.quote(schema=False, identifier=False) }}';
-        EXECUTE stmt;
-        COMMIT;
-      ELSEIF EXISTS (
-        SELECT TABNAME
-        FROM SYSCAT.TABLES
-        WHERE TABNAME = UPPER('{{ relation.identifier }}') AND TABSCHEMA = UPPER('{{ relation.schema }}') AND TYPE = 'V'
-      ) THEN
-        PREPARE stmt FROM 'DROP VIEW {{ relation.quote(schema=False, identifier=False) }}';
+        PREPARE stmt FROM 'DROP {{ relation.type | upper }} {{ relation }}';
         EXECUTE stmt;
         COMMIT;
       END IF;
@@ -193,7 +199,7 @@
 
 
 {% macro ibmdb2__make_temp_relation(base_relation, suffix) %}
-    {% set tmp_identifier = 'DBT_TMP__' ~ base_relation.identifier %}
+    {% set tmp_identifier = 'dbt_tmp__' ~ base_relation.identifier %}
     {% set tmp_relation = base_relation.incorporate(path={"identifier": tmp_identifier}) -%}
     {% do return(tmp_relation) %}
 {% endmacro %}
@@ -213,7 +219,7 @@
 
 {% macro ibmdb2__truncate_relation(relation) %}
     {% call statement('truncate_relation') -%}
-        TRUNCATE TABLE {{ relation.quote(schema=False, identifier=False) }}
+        TRUNCATE TABLE {{ relation }}
         IMMEDIATE
     {%- endcall %}
 {% endmacro %}
