@@ -19,58 +19,6 @@ from dbt.tests.util import (
     check_relations_equal,
 )
 
-from dbt.tests.adapter.basic.files import (
-    seeds_base_csv,
-    seeds_added_csv,
-    seeds_newcolumns_csv,
-    base_view_sql,
-    base_table_sql,
-    base_materialized_var_sql,
-    schema_base_yml,
-)
-
-schema_seed_yml = """
-version: 2
-seeds:
-  - name: base
-    config:
-      quote_columns: false
-      column_types:
-        id: int
-        name: varchar(64)
-        some_date: timestamp
-  - name: added
-    config:
-      quote_columns: false
-      column_types:
-        id: int
-        name: varchar(64)
-        some_date: timestamp
-  - name: newcolumns
-    config:
-      quote_columns: false
-      column_types:
-        id: int
-        name: varchar(64)
-        some_date: timestamp
-        last_initial: varchar(1)
-"""
-
-schema_seed_test_yml = """
-version: 2
-seeds:
-  - name: base
-    config:
-      quote_columns: false
-      column_types:
-        id: int
-        name: varchar(64)
-        some_date: timestamp
-    columns:
-     - name: id
-       tests:
-         - not_null
-"""
 
 test_passing_sql = """
 select * from (
@@ -90,12 +38,7 @@ where id = 1
 
 
 class TestSimpleMaterializationsIBMDB2(BaseSimpleMaterializations):
-    @pytest.fixture(scope="class")
-    def seeds(self):
-        return {
-            "base.csv": seeds_base_csv,
-            "seeds.yml": schema_seed_yml,
-        }
+
 
     def test_base(self, project):
 
@@ -171,12 +114,7 @@ class TestSingularTestsIBMDB2(BaseSingularTests):
 
 
 class TestSingularTestsEphemeralIBMDB2(BaseSingularTestsEphemeral):
-    @pytest.fixture(scope="class")
-    def seeds(self):
-        return {
-            "base.csv": seeds_base_csv,
-            "seeds.yml": schema_seed_yml,
-        }
+    pass
 
 
 class TestEmptyIBMDB2(BaseEmpty):
@@ -184,53 +122,23 @@ class TestEmptyIBMDB2(BaseEmpty):
 
 
 class TestEphemeralIBMDB2(BaseEphemeral):
-    @pytest.fixture(scope="class")
-    def seeds(self):
-        return {
-            "base.csv": seeds_base_csv,
-            "seeds.yml": schema_seed_yml,
-        }
+    pass
 
 
 class TestIncrementalIBMDB2(BaseIncremental):
-    @pytest.fixture(scope="class")
-    def seeds(self):
-        return {
-            "base.csv": seeds_base_csv,
-            "added.csv": seeds_added_csv,
-            "seeds.yml": schema_seed_yml,
-        }
+    pass
 
 
 class TestGenericTestsIBMDB2(BaseGenericTests):
-    @pytest.fixture(scope="class")
-    def seeds(self):
-        return {
-            "base.csv": seeds_base_csv,
-            "seeds.yml": schema_seed_test_yml,
-        }
-
+    pass
 
 
 class TestSnapshotCheckColsIBMDB2(BaseSnapshotCheckCols):
-    @pytest.fixture(scope="class")
-    def seeds(self):
-        return {
-            "base.csv": seeds_base_csv,
-            "added.csv": seeds_added_csv,
-            "seeds.yml": schema_seed_yml,
-        }
+    pass
 
 
 class TestSnapshotTimestampIBMDB2(BaseSnapshotTimestamp):
-    @pytest.fixture(scope="class")
-    def seeds(self):
-        return {
-            "base.csv": seeds_base_csv,
-            "added.csv": seeds_added_csv,
-            "newcolumns.csv": seeds_newcolumns_csv,
-            "seeds.yml": schema_seed_yml,
-        }
+    pass
 
 
 # class TestBaseAdapterMethodIBMDB2(BaseAdapterMethod):

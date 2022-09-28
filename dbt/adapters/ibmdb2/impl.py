@@ -1,18 +1,26 @@
 from dbt.adapters.sql import SQLAdapter
 from dbt.adapters.ibmdb2 import IBMDB2ConnectionManager
 from dbt.adapters.ibmdb2.relation import IBMDB2Relation
+from dbt.adapters.ibmdb2.column import IBMDB2Column
 
 from typing import Dict
 from dbt.utils import filter_null_values
+from dbt.exceptions import raise_compiler_error
+from dbt.adapters.base.meta import available
+from typing import Optional
+
+import agate
 
 
 class IBMDB2Adapter(SQLAdapter):
+
     ConnectionManager = IBMDB2ConnectionManager
     Relation = IBMDB2Relation
+    Column = IBMDB2Column
 
     @classmethod
     def date_function(cls):
-        return 'datenow()'
+        return 'CURRENT_DATE'
 
     def is_cancelable(cls):
         return False
@@ -52,3 +60,50 @@ class IBMDB2Adapter(SQLAdapter):
                 "schema": schema,
             }
         )
+
+    @available
+    def quote_seed_column(self, column: str, quote_config: Optional[bool]) -> str:
+        quote_columns: bool = False
+        if isinstance(quote_config, bool):
+            quote_columns = quote_config
+        elif quote_config is None:
+            pass
+        else:
+            raise_compiler_error(
+                f'The seed configuration value of "quote_columns" has an '
+                f"invalid type {type(quote_config)}"
+            )
+
+        if quote_columns:
+            return self.quote(column)
+        else:
+            return column
+
+    @classmethod
+    def convert_text_type(cls, agate_table, col_idx):
+        column = agate_table.columns[col_idx]
+        lens = (len(d.encode("utf-8")) for d in column.values_without_nulls())
+        max_len = max(lens) if lens else 64
+        length = max_len if max_len > 16 else 16
+        return "varchar({})".format(length)
+
+    @classmethod
+    def convert_date_type(cls, agate_table, col_idx):
+        return "timestamp"
+
+    @classmethod
+    def convert_datetime_type(cls, agate_table, col_idx):
+        return "timestamp"
+
+    @classmethod
+    def convert_boolean_type(cls, agate_table, col_idx):
+        return "decimal(1)"
+
+    @classmethod
+    def convert_number_type(cls, agate_table, col_idx):
+        decimals = agate_table.aggregate(agate.MaxPrecision(col_idx))
+        return "decimal"
+
+    @classmethod
+    def convert_time_type(cls, agate_table, col_idx):
+        return "timestamp"
