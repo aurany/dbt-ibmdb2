@@ -212,9 +212,18 @@ END
 
 
 {% macro ibmdb2__make_temp_relation(base_relation, suffix) %}
-  {% set tmp_identifier = 'dbt_tmp__' ~ base_relation.identifier %}
-  {% set tmp_relation = base_relation.incorporate(path={"identifier": tmp_identifier}) -%}
-  {% do return(tmp_relation) %}
+
+
+  {%- set quote_schema = base_relation.quote_policy['schema'] -%}
+  {%- set quote_identifier = base_relation.quote_policy['identifier'] -%}
+
+  {{ log(quote_schema) }}
+  {{ log(quote_identifier) }}
+
+  {%- set temp_identifier = base_relation.identifier ~ suffix | upper -%}
+  {%- set temp_relation = base_relation.incorporate(path={"identifier": temp_identifier}).quote(schema=quote_schema, identifier=quote_identifier) -%}
+
+    {{ return(temp_relation) }}
 {% endmacro %}
 
 
@@ -246,4 +255,29 @@ CURRENT_TIMESTAMP
 
 {% macro ibmdb2__current_timestamp_in_utc() %}
 CURRENT TIMESTAMP - CURRENT TIMEZONE
+{% endmacro %}
+
+
+{% macro ibmdb2__get_binding_char() %}
+  {{ return('?') }}
+{% endmacro %}
+
+
+{% macro ibmdb2__snapshot_hash_arguments(args) -%}
+    hash({%- for arg in args -%}
+        coalesce(cast({{ arg }} as varchar ), '')
+        {% if not loop.last %} || '|' || {% endif %}
+    {%- endfor -%})
+{%- endmacro %}
+
+
+{% macro ibmdb2__snapshot_string_as_time(timestamp) -%}
+    {%- set result = "timestamp('" ~ timestamp ~ "')" -%}
+    {{ return(result) }}
+{%- endmacro %}
+
+
+{% macro ibmdb2__post_snapshot(staging_relation) %}
+    {% do adapter.truncate_relation(staging_relation) %}
+    {% do adapter.drop_relation(staging_relation) %}
 {% endmacro %}
