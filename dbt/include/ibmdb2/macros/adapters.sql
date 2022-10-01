@@ -6,6 +6,7 @@
   {{ return(relation_part) }}
 {% endmacro %}
 
+
 {% macro ibmdb2__check_schema_exists(information_schema, schema) -%}
 
   {# This schema will ignore quoting and therefore also upper vs lowercase #}
@@ -211,22 +212,6 @@ END
 {% endmacro %}
 
 
-{% macro ibmdb2__make_temp_relation(base_relation, suffix) %}
-
-
-  {%- set quote_schema = base_relation.quote_policy['schema'] -%}
-  {%- set quote_identifier = base_relation.quote_policy['identifier'] -%}
-
-  {{ log(quote_schema) }}
-  {{ log(quote_identifier) }}
-
-  {%- set temp_identifier = base_relation.identifier ~ suffix | upper -%}
-  {%- set temp_relation = base_relation.incorporate(path={"identifier": temp_identifier}).quote(schema=quote_schema, identifier=quote_identifier) -%}
-
-    {{ return(temp_relation) }}
-{% endmacro %}
-
-
 {% macro ibmdb2__get_columns_in_query(select_sql) %}
   {% call statement('get_columns_in_query', fetch_result=True, auto_begin=False) -%}
 
@@ -239,6 +224,7 @@ FETCH FIRST 0 ROWS ONLY
   {% endcall %}
   {{ return(load_result('get_columns_in_query').table.columns | map(attribute='name') | list) }}
 {% endmacro %}
+
 
 {% macro ibmdb2__truncate_relation(relation) %}
   {% call statement('truncate_relation') -%}
