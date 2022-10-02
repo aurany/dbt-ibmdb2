@@ -6,7 +6,7 @@
       SELECT
         COLNAME,
         TYPENAME,
-        '{{ information_schema.database }}' AS DATABASE,
+        CURRENT_SERVER AS DATABASE, -- Should be replaced by DB from profile
         TABNAME,
         TABSCHEMA,
         COLNO
@@ -14,13 +14,13 @@
     ),
     tables AS (
       SELECT
-        '{{ information_schema.database }}' AS DATABASE,
+        CURRENT_SERVER AS DATABASE, -- Should be replaced by DB  from profile
         TABSCHEMA,
         TABNAME,
         OWNER,
         CASE
-          WHEN TYPE = 'T' THEN 'TABLE' -- upcase here to work with tests
-          WHEN TYPE = 'V' THEN 'VIEW'  -- upcase here to work with tests
+          WHEN TYPE = 'T' THEN 'TABLE' -- Upcase here to work with tests
+          WHEN TYPE = 'V' THEN 'VIEW'  -- Upcase here to work with tests
         END AS TYPE
       FROM SYSCAT.TABLES
       WHERE TYPE IN('T', 'V')
