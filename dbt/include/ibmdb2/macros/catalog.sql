@@ -6,7 +6,7 @@
       SELECT
         COLNAME,
         TYPENAME,
-        --CURRENT_SERVER AS DATABASE,
+        '{{ information_schema.database }}' AS DATABASE,
         TABNAME,
         TABSCHEMA,
         COLNO
@@ -14,7 +14,7 @@
     ),
     tables AS (
       SELECT
-        -- CURRENT_SERVER AS DATABASE,
+        '{{ information_schema.database }}' AS DATABASE,
         TABSCHEMA,
         TABNAME,
         OWNER,
@@ -26,7 +26,7 @@
       WHERE TYPE IN('T', 'V')
     )
     SELECT
-      '{{ information_schema.database }}' AS "table_database",
+      TRIM(tables.DATABASE) AS "table_database",
       TRIM(tables.TABSCHEMA) AS "table_schema",
       TRIM(tables.TABNAME) AS "table_name",
       tables.TYPE AS "table_type",
