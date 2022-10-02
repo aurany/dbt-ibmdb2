@@ -166,7 +166,7 @@ RENAME TABLE {{ from_relation }} TO {{ to_relation.replace_path(schema=None) }}
   {% endif %}
 
   {% if from_relation.is_view %}
-    {% do exceptions.raise_compiler_error('Not possible to rename DB2 views.') %}
+    {% do exceptions.raise_compiler_error('IBMDB2 Adapter error: Renaming of views is not supported.') %}
   {% endif %}
 
   {%- endcall %}
