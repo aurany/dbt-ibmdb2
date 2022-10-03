@@ -1,16 +1,55 @@
+import dbt
 from dbt.adapters.sql import SQLAdapter
 from dbt.adapters.ibmdb2 import IBMDB2ConnectionManager
 from dbt.adapters.ibmdb2.relation import IBMDB2Relation
 from dbt.adapters.ibmdb2.column import IBMDB2Column
 
-from typing import Dict
+from typing import Dict, Optional, List, Any
 from dbt.utils import filter_null_values
 from dbt.exceptions import raise_compiler_error
 from dbt.adapters.base.meta import available
-from typing import Optional
 
 import agate
 
+from dbt.dataclass_schema import dbtClassMixin, ValidationError
+from dataclasses import dataclass
+from datetime import datetime
+
+
+@dataclass
+class IBMDB2IndexConfig(dbtClassMixin):
+    columns: List[str]
+    unique: bool = False
+    type: Optional[str] = None
+
+    def render(self, relation):
+        # We append the current timestamp to the index name because otherwise
+        # the index will only be created on every other run. See
+        # https://github.com/dbt-labs/dbt-core/issues/1945#issuecomment-576714925
+        # for an explanation.
+        now = datetime.utcnow().isoformat()
+        inputs = self.columns + [relation.render(), str(self.unique), str(self.type), now]
+        string = "_".join(inputs)
+        return dbt.utils.md5(string)
+
+    @classmethod
+    def parse(cls, raw_index) -> Optional["IBMDB2IndexConfig"]:
+        if raw_index is None:
+            return None
+        try:
+            print('sdfsdfsdf')
+            print(raw_index)
+            cls.validate(raw_index)
+            return cls.from_dict(raw_index)
+        except ValidationError as exc:
+            msg = dbt.exceptions.validator_error_message(exc)
+            dbt.exceptions.raise_compiler_error(f"Could not parse index config: {msg}")
+        except TypeError:
+            dbt.exceptions.raise_compiler_error(
+                f"Invalid index config:\n"
+                f"  Got: {raw_index}\n"
+                f'  Expected a dictionary with at minimum a "columns" key'
+            )
 
 class IBMDB2Adapter(SQLAdapter):
 
@@ -28,6 +67,10 @@ class IBMDB2Adapter(SQLAdapter):
     # Notes: DB2 always need a FROM
     def debug_query(self):
         self.execute('select 1 as one from sysibm.sysdummy1')
+
+    @available
+    def parse_index(self, raw_index: Any) -> Optional[IBMDB2IndexConfig]:
+        return IBMDB2IndexConfig.parse(raw_index)
 
     # DB2 Notes:
     # ----------
