@@ -1,66 +1,66 @@
 {% materialization table, adapter='ibmdb2' %}
-  {%- set identifier = model['alias'] -%}
-  {%- set tmp_identifier = model['name'] + '__dbt_tmp' -%}
-  {%- set backup_identifier = model['name'] + '__dbt_backup' -%}
 
-  {%- set old_relation = adapter.get_relation(database=database, schema=schema, identifier=identifier) -%}
-  {%- set target_relation = api.Relation.create(identifier=identifier,
-                                                schema=schema,
-                                                database=database,
-                                                type='table') -%}
-  {%- set intermediate_relation = api.Relation.create(identifier=tmp_identifier,
-                                                      schema=schema,
-                                                      database=database,
-                                                      type='table') -%}
+{%- set existing_relation = load_cached_relation(this) -%}
+{%- set target_relation = this.incorporate(type='table') %}
+{%- set intermediate_relation =  make_intermediate_relation(target_relation) -%}
+-- the intermediate_relation should not already exist in the database; get_relation
+-- will return None in that case. Otherwise, we get a relation that we can drop
+-- later, before we try to use this name for the current operation
+{%- set preexisting_intermediate_relation = load_cached_relation(intermediate_relation) -%}
+/*
+    See ../view/view.sql for more information about this relation.
+*/
+{%- set backup_relation_type = 'table' if existing_relation is none else existing_relation.type -%}
+{%- set backup_relation = make_backup_relation(target_relation, backup_relation_type) -%}
+-- as above, the backup_relation should not already exist
+{%- set preexisting_backup_relation = load_cached_relation(backup_relation) -%}
+-- grab current tables grants config for comparision later on
+{% set grant_config = config.get('grants') %}
 
-  /*
-      See ../view/view.sql for more information about this relation.
-  */
-  {%- set backup_relation_type = 'table' if old_relation is none else old_relation.type -%}
-  {%- set backup_relation = api.Relation.create(identifier=backup_identifier,
-                                                schema=schema,
-                                                database=database,
-                                                type=backup_relation_type) -%}
+-- drop the temp relations if they exist already in the database
+{{ drop_relation_if_exists(preexisting_intermediate_relation) }}
+{{ drop_relation_if_exists(preexisting_backup_relation) }}
 
-  {%- set exists_as_table = (old_relation is not none and old_relation.is_table) -%}
-  {%- set exists_as_view = (old_relation is not none and old_relation.is_view) -%}
+{{ run_hooks(pre_hooks, inside_transaction=False) }}
 
+-- `BEGIN` happens here:
+{{ run_hooks(pre_hooks, inside_transaction=True) }}
 
-  -- drop the temp relations if they exists for some reason
-  {{ drop_relation_if_exists(intermediate_relation) }}
-  {{ drop_relation_if_exists(backup_relation) }}
+-- build model
+{% call statement('main') -%}
+  {{ get_create_table_as_sql(False, intermediate_relation, sql) }}
+{%- endcall %}
 
-  {{ run_hooks(pre_hooks, inside_transaction=False) }}
-
-  -- `BEGIN` happens here:
-  {{ run_hooks(pre_hooks, inside_transaction=True) }}
-
-  -- build model
-  {% call statement('main') -%}
-    {{ create_table_as(False, intermediate_relation, sql) }}
-  {%- endcall %}
-
-  -- cleanup
-  {% if old_relation is not none %}
-    {% if old_relation.is_view %}
-        {{ adapter.drop_relation(old_relation) }}
-    {% else %}
-        {{ adapter.rename_relation(old_relation, backup_relation) }}
-    {% endif %}
+-- cleanup
+{% if existing_relation is not none %}
+  -- >>> DB2 Note: Special case if existing relation is view -> drop
+  {% if existing_relation.is_view %}
+    {{ adapter.drop_relation(existing_relation) }}
+  {% else %}
+    {{ adapter.rename_relation(existing_relation, backup_relation) }}
   {% endif %}
+  -- <<<
+{% endif %}
 
-  {{ adapter.rename_relation(intermediate_relation, target_relation) }}
+{{ adapter.rename_relation(intermediate_relation, target_relation) }}
 
-  {{ run_hooks(post_hooks, inside_transaction=True) }}
+{% do create_indexes(target_relation) %}
 
-  {% do persist_docs(target_relation, model) %}
+{{ run_hooks(post_hooks, inside_transaction=True) }}
 
-  -- `COMMIT` happens here
-  {{ adapter.commit() }}
+{% set should_revoke = should_revoke(existing_relation, full_refresh_mode=True) %}
+{% do apply_grants(target_relation, grant_config, should_revoke=should_revoke) %}
 
-  {{ drop_relation_if_exists(backup_relation) }}
+{% do persist_docs(target_relation, model) %}
 
-  {{ run_hooks(post_hooks, inside_transaction=False) }}
+-- `COMMIT` happens here
+{{ adapter.commit() }}
 
-  {{ return({'relations': [target_relation]}) }}
+-- finally, drop the existing/backup relation after the commit
+{{ drop_relation_if_exists(backup_relation) }}
+
+{{ run_hooks(post_hooks, inside_transaction=False) }}
+
+{{ return({'relations': [target_relation]}) }}
+
 {% endmaterialization %}

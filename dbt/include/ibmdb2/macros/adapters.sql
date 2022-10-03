@@ -6,6 +6,7 @@
   {{ return(relation_part) }}
 {% endmacro %}
 
+
 {% macro ibmdb2__check_schema_exists(information_schema, schema) -%}
 
   {# This schema will ignore quoting and therefore also upper vs lowercase #}
@@ -165,7 +166,7 @@ RENAME TABLE {{ from_relation }} TO {{ to_relation.replace_path(schema=None) }}
   {% endif %}
 
   {% if from_relation.is_view %}
-    {% do exceptions.raise_compiler_error('Not possible to rename DB2 views.') %}
+    {% do exceptions.raise_compiler_error('IBMDB2 Adapter error: Renaming of views is not supported.') %}
   {% endif %}
 
   {%- endcall %}
@@ -211,13 +212,6 @@ END
 {% endmacro %}
 
 
-{% macro ibmdb2__make_temp_relation(base_relation, suffix) %}
-  {% set tmp_identifier = 'dbt_tmp__' ~ base_relation.identifier %}
-  {% set tmp_relation = base_relation.incorporate(path={"identifier": tmp_identifier}) -%}
-  {% do return(tmp_relation) %}
-{% endmacro %}
-
-
 {% macro ibmdb2__get_columns_in_query(select_sql) %}
   {% call statement('get_columns_in_query', fetch_result=True, auto_begin=False) -%}
 
@@ -230,6 +224,7 @@ FETCH FIRST 0 ROWS ONLY
   {% endcall %}
   {{ return(load_result('get_columns_in_query').table.columns | map(attribute='name') | list) }}
 {% endmacro %}
+
 
 {% macro ibmdb2__truncate_relation(relation) %}
   {% call statement('truncate_relation') -%}
@@ -246,4 +241,29 @@ CURRENT_TIMESTAMP
 
 {% macro ibmdb2__current_timestamp_in_utc() %}
 CURRENT TIMESTAMP - CURRENT TIMEZONE
+{% endmacro %}
+
+
+{% macro ibmdb2__get_binding_char() %}
+  {{ return('?') }}
+{% endmacro %}
+
+
+{% macro ibmdb2__snapshot_hash_arguments(args) -%}
+    hash({%- for arg in args -%}
+        coalesce(cast({{ arg }} as varchar ), '')
+        {% if not loop.last %} || '|' || {% endif %}
+    {%- endfor -%})
+{%- endmacro %}
+
+
+{% macro ibmdb2__snapshot_string_as_time(timestamp) -%}
+    {%- set result = "timestamp('" ~ timestamp ~ "')" -%}
+    {{ return(result) }}
+{%- endmacro %}
+
+
+{% macro ibmdb2__post_snapshot(staging_relation) %}
+    {% do adapter.truncate_relation(staging_relation) %}
+    {% do adapter.drop_relation(staging_relation) %}
 {% endmacro %}
