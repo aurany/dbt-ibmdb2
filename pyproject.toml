@@ -18,7 +18,7 @@ packages = [
 ]
 
 [tool.poetry.dependencies]
-python = "^3.7"
+python = ">=3.7.2"
 dbt-core = "^1.0.0"
 ibm-db = "^3.1.0"
 
