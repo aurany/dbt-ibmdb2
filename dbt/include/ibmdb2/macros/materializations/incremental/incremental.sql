@@ -56,6 +56,8 @@
 
   {% endif %}
 
+
+
   {% call statement("main") %}
       {{ build_sql }}
   {% endcall %}
@@ -77,12 +79,13 @@
 
   {{ run_hooks(post_hooks, inside_transaction=True) }}
 
-  -- `COMMIT` happens here
-  {% do adapter.commit() %}
-
   -- >>> DB2 Note: temp_relation not removed in default. why?
   {% do to_drop.append(temp_relation) %}
   -- <<<
+
+  -- `COMMIT` happens here
+  {% do adapter.commit() %}
+
   {% for rel in to_drop %}
       {% do adapter.drop_relation(rel) %}
   {% endfor %}
