@@ -14,3 +14,9 @@
   {% endif %}
 
 {% endmacro %}
+
+{% macro ibmdb2__call_dcl_statements(dcl_statement_list) %}
+     {% for dcl_statement in dcl_statement_list %}
+        {% do run_query(dcl_statement) %}
+     {% endfor %}
+{% endmacro %}
