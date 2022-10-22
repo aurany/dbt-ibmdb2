@@ -1,10 +1,6 @@
 [tool.poetry]
 name = "dbt-ibmdb2"
-<<<<<<< HEAD
 version = "0.4.2"
-=======
-version = "0.4.1"
->>>>>>> 509ee802fd86fffc78df0ea5bfcdc260111d04e3
 description = "The db2 adapter plugin for dbt (data build tool)"
 authors = ["aurany <rasmus.nyberg@gmail.com>"]
 license = "Apache Software License 2.0"
