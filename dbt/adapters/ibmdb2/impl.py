@@ -107,3 +107,12 @@ class IBMDB2Adapter(SQLAdapter):
     @classmethod
     def convert_time_type(cls, agate_table, col_idx):
         return "timestamp"
+
+    def valid_incremental_strategies(self):
+        """The set of standard builtin strategies which this adapter supports out-of-the-box.
+        Not used to validate custom strategies defined by end users.
+        """
+        # >>> DB2 Note:
+        # "delete+insert" and "insert_overwrite" not supported yet
+        # <<<
+        return ["append", "merge"]
