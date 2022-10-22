@@ -38,6 +38,9 @@
       {% set need_swap = true %}
   {% else %}
     {% do run_query(get_create_table_as_sql(True, temp_relation, sql)) %}
+    -- >>> DB2 Note: temp_relation was not removed in default. why?
+    {% do to_drop.append(temp_relation) %}
+    -- <<<
     {% do adapter.expand_target_column_types(
              from_relation=temp_relation,
              to_relation=target_relation) %}
@@ -55,8 +58,6 @@
     {% set build_sql = strategy_sql_macro_func(strategy_arg_dict) %}
 
   {% endif %}
-
-
 
   {% call statement("main") %}
       {{ build_sql }}
@@ -78,10 +79,6 @@
   {% endif %}
 
   {{ run_hooks(post_hooks, inside_transaction=True) }}
-
-  -- >>> DB2 Note: temp_relation not removed in default. why?
-  {% do to_drop.append(temp_relation) %}
-  -- <<<
 
   -- `COMMIT` happens here
   {% do adapter.commit() %}

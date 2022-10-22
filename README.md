@@ -44,7 +44,6 @@ $ pip install dbt-ibmdb2
 
 *Notes:*
 - dbt-ibmdb2 is built on the ibm_db python package and there are some known encoding issues related to z/OS.
-- schema and table names must be in uppercase
 
 ### Configuring your profile
 
