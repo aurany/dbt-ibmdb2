@@ -77,8 +77,9 @@ END
 {% macro ibmdb2__create_table_as(temporary, relation, sql) -%}
 
   {%- set sql_header = config.get('sql_header', none) -%}
-  {%- set organize_by = config.get('organize_by', none) -%}
   {%- set table_space = config.get('table_space', none) -%}
+  {%- set organize_by = config.get('organize_by', none) -%}
+  {%- set distribute_by = config.get('distribute_by', none) -%}
 
   {{ sql_header if sql_header is not none }}
 
@@ -87,14 +88,20 @@ CREATE TABLE {{ relation }} AS (
   {{ sql }}
 )
 WITH DATA
+
+  {%- if table_space is not none -%}
+    {{ ' ' }}
+IN {{ table_space | upper  }}
+  {%- endif -%}
+
   {%- if organize_by is not none -%}
     {{ ' ' }}
 ORGANIZE BY {{ organize_by | upper }}
   {%- endif -%}
 
-  {%- if table_space is not none -%}
+  {%- if distribute_by is not none -%}
     {{ ' ' }}
-IN {{ table_space | upper  }}
+DISTRIBUTE BY {{ distribute_by | upper }}
   {%- endif -%}
 
 {%- endmacro %}
