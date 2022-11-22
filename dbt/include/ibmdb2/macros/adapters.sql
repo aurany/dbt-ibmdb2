@@ -80,7 +80,6 @@ END
   {%- set table_space = config.get('table_space', none) -%}
   {%- set organize_by = config.get('organize_by', none) -%}
   {%- set distribute_by = config.get('distribute_by', none) -%}
-  {%- set isolation_level = config.get('isolation_level', none) -%}
 
   {{ sql_header if sql_header is not none }}
 
@@ -88,7 +87,7 @@ END
 CREATE TABLE {{ relation }} AS (
   {{ sql }}
 )
-WITH NO DATA
+WITH DATA
 
   {%- if table_space is not none -%}
     {{ ' ' }}
@@ -114,16 +113,6 @@ DISTRIBUTE BY {{ distribute_by_type | upper }}
 )
     {%- endif -%}
   {%- endif -%}
-;
-
-INSERT INTO {{ relation }} (
-  {{ sql }}
-) 
-  {%- if isolation_level is not none -%}
-    {{ ' ' }}
-WITH {{ isolation_level | upper }}
-  {%- endif -%}
-;
 
 {%- endmacro %}
 
@@ -131,16 +120,10 @@ WITH {{ isolation_level | upper }}
 {% macro ibmdb2__create_view_as(relation, sql) -%}
 
   {%- set sql_header = config.get('sql_header', none) -%}
-  {%- set isolation_level = config.get('isolation_level', none) -%}
 
   {{ sql_header if sql_header is not none }}
 CREATE VIEW {{ relation }} AS 
   {{ sql }}
-
-  {%- if isolation_level is not none -%}
-    {{ ' ' }}
-WITH {{ isolation_level | upper }}
-  {%- endif -%}
 
 {% endmacro %}
 
