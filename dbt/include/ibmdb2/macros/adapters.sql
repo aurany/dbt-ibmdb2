@@ -80,6 +80,7 @@ END
   {%- set table_space = config.get('table_space', none) -%}
   {%- set organize_by = config.get('organize_by', none) -%}
   {%- set distribute_by = config.get('distribute_by', none) -%}
+  {%- set isolation_level = config.get('isolation_level', none) -%}
 
   {{ sql_header if sql_header is not none }}
 
@@ -87,7 +88,7 @@ END
 CREATE TABLE {{ relation }} AS (
   {{ sql }}
 )
-WITH DATA
+WITH NO DATA
 
   {%- if table_space is not none -%}
     {{ ' ' }}
@@ -100,19 +101,46 @@ ORGANIZE BY {{ organize_by | upper }}
   {%- endif -%}
 
   {%- if distribute_by is not none -%}
+    {%- set distribute_by_type = distribute_by['type'] | lower -%}
     {{ ' ' }}
-DISTRIBUTE BY {{ distribute_by | upper }}
+DISTRIBUTE BY {{ distribute_by_type | upper }}
+    {%- if distribute_by_type == 'hash' -%}
+      {%- set distribute_by_columns = distribute_by['columns'] -%}
+(
+      {% for column in distribute_by_columns %}
+{{ column }}
+        {% if not loop.last %},{% endif %}
+      {% endfor %}
+)
+    {%- endif -%}
   {%- endif -%}
+;
+
+INSERT INTO {{ relation }} (
+  {{ sql }}
+) 
+  {%- if isolation_level is not none -%}
+    {{ ' ' }}
+WITH {{ isolation_level | upper }}
+  {%- endif -%}
+;
 
 {%- endmacro %}
 
 
 {% macro ibmdb2__create_view_as(relation, sql) -%}
+
   {%- set sql_header = config.get('sql_header', none) -%}
+  {%- set isolation_level = config.get('isolation_level', none) -%}
 
   {{ sql_header if sql_header is not none }}
-CREATE VIEW {{ relation }} AS
+CREATE VIEW {{ relation }} AS 
   {{ sql }}
+
+  {%- if isolation_level is not none -%}
+    {{ ' ' }}
+WITH {{ isolation_level | upper }}
+  {%- endif -%}
 
 {% endmacro %}
 
