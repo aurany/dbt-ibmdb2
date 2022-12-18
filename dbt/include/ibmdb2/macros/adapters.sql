@@ -77,8 +77,9 @@ END
 {% macro ibmdb2__create_table_as(temporary, relation, sql) -%}
 
   {%- set sql_header = config.get('sql_header', none) -%}
-  {%- set organize_by = config.get('organize_by', none) -%}
   {%- set table_space = config.get('table_space', none) -%}
+  {%- set organize_by = config.get('organize_by', none) -%}
+  {%- set distribute_by = config.get('distribute_by', none) -%}
 
   {{ sql_header if sql_header is not none }}
 
@@ -87,24 +88,41 @@ CREATE TABLE {{ relation }} AS (
   {{ sql }}
 )
 WITH DATA
-  {%- if organize_by is not none -%}
-    {{ ' ' }}
-ORGANIZE BY {{ organize_by | upper }}
-  {%- endif -%}
 
   {%- if table_space is not none -%}
     {{ ' ' }}
 IN {{ table_space | upper  }}
   {%- endif -%}
 
+  {%- if organize_by is not none -%}
+    {{ ' ' }}
+ORGANIZE BY {{ organize_by | upper }}
+  {%- endif -%}
+
+  {%- if distribute_by is not none -%}
+    {%- set distribute_by_type = distribute_by['type'] | lower -%}
+    {{ ' ' }}
+DISTRIBUTE BY {{ distribute_by_type | upper }}
+    {%- if distribute_by_type == 'hash' -%}
+      {%- set distribute_by_columns = distribute_by['columns'] -%}
+(
+      {% for column in distribute_by_columns %}
+{{ column }}
+        {% if not loop.last %},{% endif %}
+      {% endfor %}
+)
+    {%- endif -%}
+  {%- endif -%}
+
 {%- endmacro %}
 
 
 {% macro ibmdb2__create_view_as(relation, sql) -%}
+
   {%- set sql_header = config.get('sql_header', none) -%}
 
   {{ sql_header if sql_header is not none }}
-CREATE VIEW {{ relation }} AS
+CREATE VIEW {{ relation }} AS 
   {{ sql }}
 
 {% endmacro %}
