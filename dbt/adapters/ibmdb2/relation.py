@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from dbt.adapters.base.relation import BaseRelation, Policy
 
 from typing import Optional, TypeVar, Type
@@ -21,8 +21,8 @@ class IBMDB2IncludePolicy(Policy):
 
 @dataclass(frozen=True, eq=False, repr=False)
 class IBMDB2Relation(BaseRelation):
-    quote_policy: IBMDB2QuotePolicy = IBMDB2QuotePolicy()
-    include_policy: IBMDB2IncludePolicy = IBMDB2IncludePolicy()
+    quote_policy: IBMDB2QuotePolicy = field(default_factory=lambda: IBMDB2QuotePolicy())
+    include_policy: IBMDB2IncludePolicy = field(default_factory=lambda: IBMDB2IncludePolicy())
 
     @staticmethod
     def add_ephemeral_prefix(name: str):

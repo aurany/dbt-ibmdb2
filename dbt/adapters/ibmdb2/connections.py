@@ -48,12 +48,12 @@ class IBMDB2ConnectionManager(SQLConnectionManager):
             self.release()
             logger.debug('ibm_db_dbi error: {}'.format(str(exc)))
             logger.debug("Error running SQL: {}".format(sql))
-            raise dbt.exceptions.DatabaseException(str(exc))
+            raise dbt.exceptions.DbtDatabaseError(str(exc))
         except Exception as exc:
             self.release()
             logger.debug("Error running SQL: {}".format(sql))
             logger.debug("Rolling back transaction.")
-            raise dbt.exceptions.RuntimeException(str(exc))
+            raise dbt.exceptions.DbtRuntimeError(str(exc))
 
     @classmethod
     def open(cls, connection):

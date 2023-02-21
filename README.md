@@ -62,7 +62,7 @@ your_profile_name:
       host: localhost
       port: 50000
       protocol: TCPIP
-      username: my_username
+      user: my_username
       password: my_password
       extra_connect_opts: my_extra_config_options
 ```
@@ -75,7 +75,7 @@ your_profile_name:
 | host            | Hostname or IP-adress                                                               | Required                                                           | `localhost`                                    |
 | port            | The port to use                                                                     | Optional                                                           | `50000`                                        |
 | protocol        | Protocol to use                                                                     | Optional                                                           | `TCPIP`                                        |
-| username        | The username to use to connect to the server                                        | Required                                                           | `my-username`                                  |
+| user            | The username to use to connect to the server                                        | Required                                                           | `my-username`                                  |
 | password        | The password to use for authenticating to the server                                | Required                                                           | `my-password`                                  |
 | extra_connect_opts        | Extra connection options                                | Optional                                                           | `Security=SSL;SSLClientKeyStoreDB=<path-to-client-keystore>;SSLClientKeyStash=<path-to-client-keystash>`                                  |
 

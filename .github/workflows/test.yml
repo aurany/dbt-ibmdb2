@@ -44,10 +44,9 @@ jobs:
         curl -sSL https://install.python-poetry.org | python3
         poetry install
 
-    - name: Wait some time for DB2
-      uses: jakejarvis/wait-action@master
-      with:
-        time: '5m'
+    - name: Wait for DB2
+      run: |
+        docker logs -f "${{ job.services.db2.id }}" 2>&1 | grep -m 1 '(*) Setup has completed.'
 
     - name: Run tests
       run: poetry run tox
