@@ -16,7 +16,7 @@ install:
 		-p 50002:50002 \
 		--privileged=true \
 		ibmcom/db2:11.5.7.0
-	@sleep 300
+	@docker logs -f dbt-db2 2>&1 | grep -m 1 '(*) Setup has completed.'
 	@docker exec \
 		-d \
 		--user db2inst1 \

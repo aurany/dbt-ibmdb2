@@ -6,6 +6,7 @@ db2 update dbm cfg using SSL_SVR_KEYDB /keystore/server.kdb
 db2 update dbm cfg using SSL_SVR_STASH /keystore/server.sth
 db2 update dbm cfg using SSL_SVCENAME 50002
 db2 update dbm cfg using SSL_SVR_LABEL aurany
+db2 update dbm cfg using ssl_versions TLSv12
 
 db2set DB2COMM=SSL,TCPIP
 db2stop force

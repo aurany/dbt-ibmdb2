@@ -252,16 +252,6 @@ IMMEDIATE
 {% endmacro %}
 
 
-{% macro ibmdb2__current_timestamp() %}
-CURRENT_TIMESTAMP
-{% endmacro %}
-
-
-{% macro ibmdb2__current_timestamp_in_utc() %}
-CURRENT TIMESTAMP - CURRENT TIMEZONE
-{% endmacro %}
-
-
 {% macro ibmdb2__get_binding_char() %}
   {{ return('?') }}
 {% endmacro %}
@@ -272,12 +262,6 @@ CURRENT TIMESTAMP - CURRENT TIMEZONE
         coalesce(cast({{ arg }} as varchar ), '')
         {% if not loop.last %} || '|' || {% endif %}
     {%- endfor -%})
-{%- endmacro %}
-
-
-{% macro ibmdb2__snapshot_string_as_time(timestamp) -%}
-    {%- set result = "timestamp('" ~ timestamp ~ "')" -%}
-    {{ return(result) }}
 {%- endmacro %}
 
 
