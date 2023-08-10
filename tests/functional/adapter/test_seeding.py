@@ -43,24 +43,23 @@ class TestBatchSizeIBMDB2:
             "test_batch_size.sql": test_batch_size_sql,
         }
 
-    def test_get_batch_size_macro(self, project, batch_size_test):
-        BATCH_SIZE = 200
-
+    @pytest.mark.parametrize("custom,BATCH_SIZE", [(True, 200), (False, 1000)])
+    def test_get_batch_size_macro(self, project, batch_size_test, custom, BATCH_SIZE):
         results = run_dbt(["seed"])
 
         model_path = os.path.join(self.models, "test_batch_size.sql")
         with open(model_path, "w") as f:
             f.write(batch_size_test["test_batch_size.sql"])
 
-        results = run_dbt(
-            [
-                "run",
-                "-m",
-                "test_batch_size",
-                "--vars",
-                f"ibmdb2_batch_size: {BATCH_SIZE}",
-            ]
-        )
+        dbt_command_list = [
+            "run",
+            "-m",
+            "test_batch_size",
+        ]
+        if custom:
+            dbt_command_list += ["--vars", f"ibmdb2_batch_size: {BATCH_SIZE}"]
+
+        results = run_dbt(dbt_command_list)
         assert len(results) == 1
 
         # Check the number of rows returned by the query
