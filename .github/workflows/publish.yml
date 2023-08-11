@@ -52,7 +52,7 @@ jobs:
         time: '5m'
 
     - name: Run tests
-      run: poetry run tox
+      run: poetry run tox --parallel 2
 
     - name: Build wheels
       run: |
