@@ -36,4 +36,4 @@ uninstall:
 
 test:
 	@rm -rf .tox .pytest_cache logs
-	@poetry run tox
+	@poetry run tox --parallel 5
