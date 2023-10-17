@@ -145,6 +145,7 @@ WHERE TABNAME = '{{ identifier }}'
   {% if relation.schema %}
   AND TABSCHEMA = '{{ schema }}'
   {% endif %}
+  AND HIDDEN = ''
 ORDER BY colno
 
   {% endcall %}
