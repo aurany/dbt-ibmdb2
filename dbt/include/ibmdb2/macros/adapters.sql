@@ -171,7 +171,7 @@ FROM SYSCAT.TABLES
 WHERE
   TABSCHEMA = '{{ schema }}' AND
   TYPE IN('T', 'V')
-
+ WITH UR
   {% endcall %}
   {{ return(load_result('list_relations_without_caching').table) }}
 {% endmacro %}
