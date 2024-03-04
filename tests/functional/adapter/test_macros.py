@@ -7,13 +7,15 @@ from dbt.tests.adapter.utils.test_last_day import BaseLastDay
 from dbt.tests.adapter.utils.test_datediff import BaseDateDiff
 from dbt.tests.adapter.utils.test_split_part import BaseSplitPart
 from dbt.tests.adapter.utils.data_types.test_type_string import BaseTypeString
+from dbt.tests.adapter.utils.fixture_dateadd import seeds__data_dateadd_csv
+from dbt.tests.adapter.utils.fixture_datediff import models__test_datediff_yml
 from dbt.tests.adapter.utils.fixture_split_part import seeds__data_split_part_csv
 
 seeds__data_hash_csv = """input_1,output
 ab,187EF4436122D1CC2F40DC2B92F0EBA0
 a,0CC175B9C0F1B6A831C399E269772661
 1,C4CA4238A0B923820DCC509A6F75849B
-,D41D8CD98F00B204E9800998ECF8427E
+EMPTY,D41D8CD98F00B204E9800998ECF8427E
 """
 
 seeds__schema_hash_yml = """
@@ -97,14 +99,7 @@ seeds:
         result_1: varchar(10)
         result_2: varchar(10)
         result_3: varchar(10)
-"""
-
-seeds__data_dateadd_csv = """from_time,interval_length,datepart,result
-2018-01-01 01:00:00,1,day,2018-01-02 01:00:00
-2018-01-01 01:00:00,1,month,2018-02-01 01:00:00
-2018-01-01 01:00:00,1,year,2019-01-01 01:00:00
-2018-01-01 01:00:00,1,hour,2018-01-01 02:00:00
-,1,day,
+        result_4: varchar(10)
 """
 
 seeds__schema_dateadd_yml = """
@@ -191,16 +186,6 @@ union all select {{ datediff("'1999-12-26 00:00:00.000000'", "'2000-01-03 00:00:
 union all select {{ datediff("'1999-12-01 00:00:00.000000'", "'2000-01-01 00:00:00.000000'", "month") }} as actual, 1 as expected from sysibm.sysdummy1
 union all select {{ datediff("'1999-10-01 00:00:00.000000'", "'2000-01-01 00:00:00.000000'", "quarter") }} as actual, 1 as expected from sysibm.sysdummy1
 union all select {{ datediff("'1999-01-01 00:00:00.000000'", "'2000-01-01 00:00:00.000000'", "year") }} as actual, 1 as expected from sysibm.sysdummy1
-"""
-
-models__test_datediff_yml = """
-version: 2
-models:
-  - name: test_datediff
-    tests:
-      - assert_equal:
-          actual: actual
-          expected: expected
 """
 
 class TestHashIBMDB2(BaseHash):
