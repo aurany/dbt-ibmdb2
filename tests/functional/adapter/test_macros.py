@@ -7,6 +7,7 @@ from dbt.tests.adapter.utils.test_last_day import BaseLastDay
 from dbt.tests.adapter.utils.test_datediff import BaseDateDiff
 from dbt.tests.adapter.utils.test_split_part import BaseSplitPart
 from dbt.tests.adapter.utils.data_types.test_type_string import BaseTypeString
+from dbt.tests.adapter.utils.fixture_split_part import seeds__data_split_part_csv
 
 seeds__data_hash_csv = """input_1,output
 ab,187EF4436122D1CC2F40DC2B92F0EBA0
@@ -82,12 +83,6 @@ models__type_string_actual_sql = """
 select cast('Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.'
 as {{ type_string() }}(1000) ) as string_col
 from sysibm.sysdummy1
-"""
-
-seeds__data_split_part_csv = """parts,split_on,result_1,result_2,result_3
-a|b|c,|,a,b,c
-1|2|3,|,1,2,3
-,|,,,
 """
 
 seeds__schema_split_part_yml = """
