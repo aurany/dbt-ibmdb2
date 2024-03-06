@@ -15,7 +15,7 @@ install:
 		-p 50000:50000 \
 		-p 50002:50002 \
 		--privileged=true \
-		ibmcom/db2:11.5.7.0
+		icr.io/db2_community/db2:11.5.9.0
 	@docker logs -f dbt-db2 2>&1 | grep -m 1 '(*) Setup has completed.'
 	@docker exec \
 		-d \

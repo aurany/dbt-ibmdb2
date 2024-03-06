@@ -36,6 +36,9 @@ class IBMDB2Credentials(Credentials):
     def _connection_keys(self):
         return ('host', 'database', 'schema', 'user', 'password', 'port', 'protocol', 'extra_connect_opts')
 
+    @property
+    def unique_field(self) -> str:
+        return self.host
 
 class IBMDB2ConnectionManager(SQLConnectionManager):
     TYPE = 'ibmdb2'
