@@ -2,12 +2,12 @@ from contextlib import contextmanager
 
 from dataclasses import dataclass
 
-import dbt.exceptions
-from dbt.adapters.base import Credentials
-from dbt.contracts.connection import AdapterResponse
-from dbt.contracts.connection import Connection
+import dbt_common.exceptions
+from dbt.adapters.contracts.connection import Credentials
+from dbt.adapters.contracts.connection import AdapterResponse
+from dbt.adapters.contracts.connection import Connection
 from dbt.adapters.sql import SQLConnectionManager
-from dbt.logger import GLOBAL_LOGGER as logger
+from dbt.adapters.events.logging import AdapterLogger
 
 from typing import (
     Type,
@@ -17,6 +17,8 @@ from typing import (
 
 import ibm_db
 import ibm_db_dbi
+
+logger = AdapterLogger("IBM DB2")
 
 @dataclass
 class IBMDB2Credentials(Credentials):
@@ -51,12 +53,12 @@ class IBMDB2ConnectionManager(SQLConnectionManager):
             self.release()
             logger.debug('ibm_db_dbi error: {}'.format(str(exc)))
             logger.debug("Error running SQL: {}".format(sql))
-            raise dbt.exceptions.DbtDatabaseError(str(exc))
+            raise dbt_common.exceptions.DbtDatabaseError(str(exc))
         except Exception as exc:
             self.release()
             logger.debug("Error running SQL: {}".format(sql))
             logger.debug("Rolling back transaction.")
-            raise dbt.exceptions.DbtRuntimeError(str(exc))
+            raise dbt_common.exceptions.DbtRuntimeError(str(exc))
 
     @classmethod
     def open(cls, connection):

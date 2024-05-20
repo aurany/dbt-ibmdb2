@@ -2,7 +2,7 @@ from dataclasses import dataclass, field
 from dbt.adapters.base.relation import BaseRelation, Policy
 
 from typing import Optional, TypeVar, Type
-from dbt.contracts.relation import RelationType
+from dbt.adapters.contracts.relation import RelationType
 
 
 @dataclass

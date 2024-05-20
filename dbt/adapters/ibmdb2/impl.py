@@ -4,8 +4,8 @@ from dbt.adapters.ibmdb2.relation import IBMDB2Relation
 from dbt.adapters.ibmdb2.column import IBMDB2Column
 
 from typing import Dict
-from dbt.utils import filter_null_values
-from dbt.exceptions import CompilationError
+from dbt_common.utils import filter_null_values
+from dbt_common.exceptions import CompilationError
 from dbt.adapters.base.meta import available
 from typing import Optional
 
