@@ -18,15 +18,15 @@ packages = [
 ]
 
 [tool.poetry.dependencies]
-python = ">=3.8"
-dbt-core = ">=1.8.0"
+python = ">=3.9,<3.12"
+dbt-core = ">=1.10.0"
 ibm-db = "^3.1.0"
 
 [tool.poetry.dev-dependencies]
 pytest = "^7.1.2"
 tox = "^3.25.1"
 python-dotenv = "^0.20.0"
-dbt-tests-adapter = ">=1.8.0"
+dbt-tests-adapter = ">=1.10.0"
 
 [build-system]
 requires = ["poetry-core>=1.0.8"]
