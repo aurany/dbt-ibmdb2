@@ -266,33 +266,30 @@ test = ["hypothesis (>=6.87,<7.0)", "pytest (>=7.3,<8.0)", "pytest-cov (>=4.1,<5
 
 [[package]]
 name = "dbt-core"
-version = "1.10.11"
+version = "1.9.10"
 description = "With dbt, data analysts and engineers can build analytics the way engineers build applications."
 optional = false
 python-versions = ">=3.9"
 groups = ["main", "dev"]
 files = [
-    {file = "dbt_core-1.10.11-py3-none-any.whl", hash = "sha256:b5a8937a1b6e971d922785b60bc6b4621680b1c0f01081cf942b358df79c9aa6"},
-    {file = "dbt_core-1.10.11.tar.gz", hash = "sha256:1cacd2952f2d54d44356b7560a05c01560363d5779188e37da0302575c9b9b50"},
+    {file = "dbt_core-1.9.10-py3-none-any.whl", hash = "sha256:3ec67de469902499083be4df70501f6c5cfea7caa5afa23ecaf898a4e505d56f"},
+    {file = "dbt_core-1.9.10.tar.gz", hash = "sha256:ae0c4be496b349cd308221fe844965fb6736b951fccf0446af52383cea44d48b"},
 ]
 
 [package.dependencies]
 agate = ">=1.7.0,<1.10"
 click = ">=8.0.2,<9.0"
 daff = ">=1.3.46"
-dbt-adapters = ">=1.15.5,<2.0"
-dbt-common = ">=1.27.0,<2.0"
+dbt-adapters = ">=1.10.1,<2.0"
+dbt-common = ">=1.13.0,<2.0"
 dbt-extractor = ">=0.5.0,<=0.6"
-dbt-protos = ">=1.0.346,<2.0"
-dbt-semantic-interfaces = ">=0.9.0,<0.10"
+dbt-semantic-interfaces = ">=0.7.4,<0.8"
 Jinja2 = ">=3.1.3,<4"
-jsonschema = ">=4.19.1,<5.0"
 mashumaro = {version = ">=3.9,<3.15", extras = ["msgpack"]}
 networkx = ">=2.3,<4.0"
 packaging = ">20.9"
 pathspec = ">=0.9,<0.13"
 protobuf = ">=6.0,<7.0"
-pydantic = "<3"
 pytz = ">=2015.7"
 pyyaml = ">=6.0"
 requests = "<3.0.0"
@@ -343,20 +340,20 @@ protobuf = ">=3.17.1"
 
 [[package]]
 name = "dbt-semantic-interfaces"
-version = "0.9.0"
+version = "0.7.5"
 description = "The shared semantic layer definitions that dbt-core and MetricFlow use"
 optional = false
 python-versions = ">=3.8"
 groups = ["main", "dev"]
 files = [
-    {file = "dbt_semantic_interfaces-0.9.0-py3-none-any.whl", hash = "sha256:1b54c06ba89190a47a7f0563360930a0cce869e55b484ca09d261ade0e319155"},
-    {file = "dbt_semantic_interfaces-0.9.0.tar.gz", hash = "sha256:5c921257dce8bb51c9ffb5479f2bdd959e16ebfb98ee833de6daa70788c47271"},
+    {file = "dbt_semantic_interfaces-0.7.5-py3-none-any.whl", hash = "sha256:36315cfa6175da86904c86414948516bda3cf595bf9edd18e156437a2c5f6619"},
+    {file = "dbt_semantic_interfaces-0.7.5.tar.gz", hash = "sha256:8857f1833bffe5194f9d676ae2dc8cbcc45e8af4152187e351f68377708c39bb"},
 ]
 
 [package.dependencies]
 click = ">=7.0,<9.0"
 importlib-metadata = ">=6.0,<9"
-jinja2 = ">=3.1.6,<4"
+jinja2 = ">=3.1.3,<4"
 jsonschema = ">=4.0,<5"
 more-itertools = ">=8.0,<11.0"
 pydantic = ">=1.10,<3"
@@ -1680,4 +1677,4 @@ type = ["pytest-mypy"]
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.9,<3.12"
-content-hash = "429b1ae46748d04cf978a94127ced129683dff648b8e6a9328b4c97dd8130109"
+content-hash = "97be0cb36df25afd5befe253c03010ca8fb3e93a10273ce7ad64183cbbca9128"
