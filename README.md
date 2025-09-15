@@ -96,3 +96,4 @@ Want to report a bug or request a feature? Open [an issue](https://github.com/au
 ### Credits
 
 dbt-ibmdb2 is heavily inspired by and borrows from [dbt-mysql](https://github.com/dbeatty10/dbt-mysql) and [dbt-oracle](https://github.com/techindicium/dbt-oracle).
+
